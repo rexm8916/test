@@ -188,11 +188,12 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                <h5 class="modal-title" id="addCustomerModalLabel">Add New {{ request('type') == 'purchase' ? 'Supplier' : 'Customer' }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="addCustomerForm">
+                    <input type="hidden" name="type" value="{{ request('type') == 'purchase' ? 'supplier' : 'customer' }}">
                     <div class="mb-3">
                         <label for="new_name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="new_name" name="name" required>

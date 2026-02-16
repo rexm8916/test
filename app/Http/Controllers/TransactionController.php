@@ -49,7 +49,9 @@ class TransactionController extends Controller
     public function create()
     {
         $products = \App\Models\Product::all();
-        $customers = \App\Models\Customer::all();
+        $type = request('type', 'sale');
+        $customerType = $type == 'purchase' ? 'supplier' : 'customer';
+        $customers = \App\Models\Customer::where('type', $customerType)->get();
         return view('transactions.create', compact('products', 'customers'));
     }
 

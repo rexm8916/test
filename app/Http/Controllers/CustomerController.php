@@ -23,6 +23,7 @@ class CustomerController extends Controller
             'name' => 'required',
             'contact' => 'nullable',
             'address' => 'nullable',
+            'type' => 'required|in:customer,supplier',
         ]);
 
         $customer = \App\Models\Customer::create($request->all());
