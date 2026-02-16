@@ -68,8 +68,7 @@
             </div><!-- end card body -->
         </div><!-- end card -->
     </div><!-- end col -->
-        </div><!-- end card -->
-    </div><!-- end col -->
+
 
     <div class="col-xl-3 col-md-6">
         <!-- card -->
@@ -121,7 +120,6 @@
                 </div>
             </div><!-- end card body -->
         </div><!-- end card -->
-    </div><!-- end col -->        </div><!-- end card -->
     </div><!-- end col -->
 
     <div class="col-xl-3 col-md-6">
