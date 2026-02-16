@@ -68,8 +68,63 @@
             </div><!-- end card body -->
         </div><!-- end card -->
     </div><!-- end col -->
-    
-     <div class="col-xl-3 col-md-6">
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Purchases Today (Pembelian)</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            Rp {{ number_format($todayPurchases, 0, ',', '.') }}
+                        </h4>
+                        <a href="{{ route('transactions.index', ['type' => 'purchase']) }}" class="text-decoration-underline text-muted">View purchases</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-soft-secondary rounded fs-3">
+                            <i class="ri-shopping-basket-line text-secondary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="text-uppercase fw-medium text-muted mb-0">Paid Today (Uang Masuk)</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            Rp {{ number_format($todayPaid, 0, ',', '.') }}
+                        </h4>
+                        <a href="{{ route('debts.index') }}" class="text-decoration-underline text-muted">View details</a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-soft-success rounded fs-3">
+                            <i class="ri-hand-coin-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
         <!-- card -->
         <div class="card card-animate">
             <div class="card-body">
@@ -100,6 +155,19 @@
 <div class="row">
     <div class="col-xl-12">
         <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Sales Overview (Today)</h4>
+            </div>
+            <div class="card-body">
+                <div id="sales-overview-chart" data-colors='["--vz-primary"]' class="apex-charts" dir="ltr"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Quick Actions</h4>
             </div><!-- end card header -->
@@ -124,3 +192,47 @@
     </div><!-- end col -->
 </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var options = {
+            series: [{
+                name: 'Sales',
+                data: @json($sales)
+            }],
+            chart: {
+                height: 350,
+                type: 'area',
+                toolbar: {
+                    show: false
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth'
+            },
+            xaxis: {
+                categories: @json($hours),
+                tooltip: {
+                    enabled: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    formatter: function (value) {
+                        return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                    }
+                }
+            },
+            colors: ['#405189'],
+        };
+
+        var chart = new ApexCharts(document.querySelector("#sales-overview-chart"), options);
+        chart.render();
+    });
+</script>
+@endpush
