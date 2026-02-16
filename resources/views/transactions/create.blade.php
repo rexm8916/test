@@ -1,144 +1,189 @@
 @extends('layouts.velzon')
 
-@section('title', 'New Transaction')
+@section('title', 'Create Transaction')
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">New Transaction</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{{ route('transactions.index') }}">Transactions</a></li>
-                    <li class="breadcrumb-item active">Create</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-12">
+<div class="row justify-content-center">
+    <div class="col-xxl-9">
         <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Transaction Details</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('transactions.store') }}" method="POST" id="transactionForm">
-                    @csrf
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="type" class="form-label">Transaction Type</label>
-                            <select name="type" id="type" class="form-select">
-                                <option value="sale" {{ request('type') == 'sale' ? 'selected' : '' }}>Sale (Penjualan)</option>
-                                <option value="purchase" {{ request('type') == 'purchase' ? 'selected' : '' }}>Purchase (Pembelian)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="transaction_date" class="form-label">Date</label>
-                            <input type="date" name="transaction_date" id="transaction_date" value="{{ date('Y-m-d') }}" class="form-control" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="customer_id" class="form-label">Customer / Supplier</label>
-                        <div class="input-group">
-                            <select name="customer_id" id="customer_id" class="form-select">
-                                <option value="">-- Generic / None --</option>
-                                @foreach($customers as $customer)
-                                    <option value="{{ $customer->id }}" {{ Str::contains(strtolower($customer->name), ['umum', 'walk-in', 'general']) ? 'selected' : '' }}>{{ $customer->name }}</option>
-                                @endforeach
-                            </select>
-                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i class="ri-add-line"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <h5 class="fs-14 mb-2">Items</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-nowrap align-middle" id="itemsTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col" style="width: 40%">Product</th>
-                                        <th scope="col" style="width: 15%">Qty</th>
-                                        <th scope="col" style="width: 20%">Price</th>
-                                        <th scope="col" style="width: 20%">Subtotal</th>
-                                        <th scope="col" style="width: 5%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows added by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                         <button type="button" class="btn btn-soft-secondary mt-2" onclick="addItem()">
-                            <i class="ri-add-fill me-1 align-bottom"></i> Add Item
-                        </button>
-                    </div>
-
-                    <div class="row justify-content-end mb-3">
-                        <div class="col-md-4">
-                            <div class="mb-2">
-                                <label for="discount" class="form-label text-end d-block">Discount (Potongan)</label>
-                                <input type="number" name="discount" id="discount" class="form-control text-end" value="0" min="0" oninput="calculateTotal()">
+            <form action="{{ route('transactions.store') }}" method="POST" id="invoice_form" autocomplete="off">
+                @csrf
+                <input type="hidden" name="type" value="{{ request('type', 'sale') }}">
+                <div class="card-body border-bottom border-bottom-dashed p-4">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="profile-user mx-auto  mb-3">
+                                <span class="d-inline-block p-2 bg-soft-light rounded-circle">
+                                     @if(request('type') == 'purchase')
+                                        <i class="ri-shopping-cart-line display-4 text-primary"></i>
+                                    @else
+                                        <i class="ri-file-list-3-line display-4 text-primary"></i>
+                                    @endif
+                                </span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                                <h5 class="fs-16 mb-0">Total:</h5>
-                                <h5 class="fs-16 mb-0">Rp <span id="grandTotal">0</span></h5>
+                            <div>
+                                <h5 class="mb-1">{{ request('type') == 'purchase' ? 'New Purchase' : 'New Sale' }}</h5>
+                                <p class="text-muted mb-0">Create a new transaction</p>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="border-top pt-4 mt-4">
-                        <h5 class="fs-14 mb-3">Payment Details</h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="payment_status" class="form-label">Status</label>
-                                    <select name="payment_status" id="payment_status" class="form-select" onchange="togglePaymentFields()">
-                                        <option value="paid">Fully Paid (Lunas)</option>
-                                        <option value="partial">Partial Payment (Hutang)</option>
-                                        <option value="unpaid">Unpaid (Full Hutang)</option>
+                        <div class="col-lg-8">
+                            <div class="row g-3">
+                                <div class="col-lg-4 col-6">
+                                    <label for="transaction_date" class="form-label text-muted text-uppercase fw-semibold">Date</label>
+                                    <input type="date" class="form-control bg-light border-0" id="transaction_date" name="transaction_date" placeholder="Select date" value="{{ old('transaction_date', date('Y-m-d')) }}" required>
+                                </div>
+                                <!--end col-->
+                                <div class="col-lg-4 col-6">
+                                    <label for="payment_status" class="form-label text-muted text-uppercase fw-semibold">Payment Status</label>
+                                    <select class="form-select bg-light border-0" id="payment_status" name="payment_status" onchange="togglePaymentFields()">
+                                        <option value="paid">Paid</option>
+                                        <option value="unpaid">Unpaid</option>
+                                        <option value="partial">Partial</option>
                                     </select>
                                 </div>
+                                <!--end col-->
+                                <div class="col-lg-4 col-6">
+                                    <label for="due_date" class="form-label text-muted text-uppercase fw-semibold">Due Date</label>
+                                    <input type="date" class="form-control bg-light border-0" id="due_date" name="due_date" placeholder="Select date" value="{{ old('due_date') }}">
+                                </div>
+                                <!--end col-->
                             </div>
-                            <div class="col-md-6">
-                                <div id="amountPaidContainer" class="mb-3">
-                                    <label for="amount_paid" class="form-label">Amount Paid (Bayar)</label>
-                                    <input type="number" name="amount_paid" id="amount_paid" class="form-control" min="0" oninput="calculateChange()">
-                                </div>
-                                <div id="dueDateContainer" class="mb-3 d-none">
-                                    <label for="due_date" class="form-label">Due Date (Jatuh Tempo)</label>
-                                    <input type="date" name="due_date" id="due_date" class="form-control">
-                                </div>
+                            <!--end row-->
+                        </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-lg-4 col-sm-6">
+                            <label for="customer_id" class="text-muted text-uppercase fw-semibold">{{ request('type') == 'purchase' ? 'Supplier' : 'Customer' }}</label>
+                             <div class="input-group">
+                                <select class="form-select bg-light border-0" id="customer_id" name="customer_id">
+                                    <option value="">Select {{ request('type') == 'purchase' ? 'Supplier' : 'Customer' }}</option>
+                                    @foreach($customers as $customer)
+                                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i class="ri-add-line"></i></button>
                             </div>
                         </div>
-
-                        <div class="row mt-2">
-                            <div class="col-md-6">
-                                <div id="changeContainer" class="alert alert-success d-none" role="alert">
-                                    <strong>Change (Kembalian):</strong> Rp <span id="changeDisplay">0</span>
-                                </div>
-                                <div id="remainingContainer" class="alert alert-danger d-none" role="alert">
-                                    <strong>Remaining Debt (Sisa Hutang):</strong> Rp <span id="remainingDisplay">0</span>
-                                </div>
+                        <!--end col-->
+                    </div>
+                    <!--end row-->
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="invoice-table table table-borderless table-nowrap mb-0">
+                            <thead class="align-middle">
+                                <tr class="table-active">
+                                    <th scope="col" style="width: 50px;">#</th>
+                                    <th scope="col">Product Details</th>
+                                    <th scope="col" style="width: 120px;">Price</th>
+                                    <th scope="col" style="width: 120px;">Quantity</th>
+                                    <th scope="col" class="text-end" style="width: 150px;">Amount</th>
+                                    <th scope="col" class="text-end" style="width: 105px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="newlink">
+                                <tr id="1" class="product text-start">
+                                    <th scope="row" class="product-id">1</th>
+                                    <td class="text-start">
+                                        <div class="mb-2">
+                                            <select class="form-select bg-light border-0" name="items[0][product_id]" onchange="updatePrice(this)" required>
+                                                <option value="">Select Product...</option>
+                                                @foreach($products as $product)
+                                                    <option value="{{ $product->id }}" data-price="{{ request('type') == 'purchase' ? $product->buy_price : $product->sell_price }}">{{ $product->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control product-price bg-light border-0" name="items[0][price]" step="100" placeholder="0" onchange="calculateTotal()" required />
+                                    </td>
+                                    <td>
+                                        <div class="input-step">
+                                            <button type="button" class='minus'>–</button>
+                                            <input type="number" class="product-quantity" name="items[0][quantity]" value="1" min="1" onchange="calculateTotal()">
+                                            <button type="button" class='plus'>+</button>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <div>
+                                            <input type="text" class="form-control bg-light border-0 product-line-price" placeholder="Rp 0" readonly />
+                                        </div>
+                                    </td>
+                                    <td class="product-removal">
+                                        <a href="javascript:void(0)" class="btn btn-success" onclick="removeItem(this)">Delete</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tbody>
+                                <tr id="newForm" style="display: none;"></tr>
+                                <tr>
+                                    <td colspan="5">
+                                        <a href="javascript:new_link()" id="add-item" class="btn btn-soft-secondary fw-medium"><i class="ri-add-fill me-1 align-bottom"></i> Add Item</a>
+                                    </td>
+                                </tr>
+                                <tr class="border-top border-top-dashed mt-2">
+                                    <td colspan="3"></td>
+                                    <td colspan="2" class="p-0">
+                                        <table class="table table-borderless table-sm table-nowrap align-middle mb-0">
+                                            <tbody>
+                                                <tr>
+                                                    <th scope="row">Sub Total</th>
+                                                    <td style="width:150px;">
+                                                        <input type="text" class="form-control bg-light border-0" id="cart-subtotal" placeholder="Rp 0" readonly />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Discount</th>
+                                                    <td>
+                                                        <input type="number" class="form-control bg-light border-0" id="cart-discount" name="discount" placeholder="0" onchange="calculateTotal()" />
+                                                    </td>
+                                                </tr>
+                                                <tr class="border-top border-top-dashed">
+                                                    <th scope="row">Total Amount</th>
+                                                    <td>
+                                                        <input type="hidden" name="total_amount" id="total_amount_input">
+                                                        <input type="text" class="form-control bg-light border-0" id="cart-total" placeholder="Rp 0" readonly />
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <!--end table-->
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <!--end table-->
+                    </div>
+                    <div class="row mt-3" id="payment_details_section" style="display: none;">
+                        <div class="col-lg-4">
+                            <div class="mb-2">
+                                <label for="amount_paid" class="form-label text-muted text-uppercase fw-semibold">Amount Paid</label>
+                                <input type="number" class="form-control bg-light border-0" id="amount_paid" name="amount_paid" placeholder="Enter amount paid">
                             </div>
                         </div>
+                        <!--end col-->
                     </div>
-
-                    <div class="d-flex align-items-center justify-content-end mt-4">
-                        <a href="{{ route('dashboard') }}" class="btn btn-light me-2">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Save Transaction</button>
+                    <!--end row-->
+                    <div class="mt-4">
+                        <label for="notes" class="form-label text-muted text-uppercase fw-semibold">NOTES</label>
+                        <textarea class="form-control alert alert-info" id="notes" name="notes" placeholder="Notes" rows="2"></textarea>
                     </div>
-
-                </form>
-            </div>
+                    <div class="hstack gap-2 justify-content-end d-print-none mt-4">
+                        <button type="submit" class="btn btn-success"><i class="ri-save-3-line align-bottom me-1"></i> Save Transaction</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+    <!--end col-->
 </div>
+<!--end row-->
 
-<!-- Modal -->
+<!-- Add Customer Modal -->
 <div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -148,18 +193,17 @@
             </div>
             <div class="modal-body">
                 <form id="addCustomerForm">
-                    @csrf
                     <div class="mb-3">
-                        <label for="new_customer_name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="new_customer_name" name="name" required>
+                        <label for="new_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="new_name" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="new_customer_contact" class="form-label">Contact (HP/WA)</label>
-                        <input type="text" class="form-control" id="new_customer_contact" name="contact">
+                        <label for="new_contact" class="form-label">Contact</label>
+                        <input type="text" class="form-control" id="new_contact" name="contact">
                     </div>
                     <div class="mb-3">
-                        <label for="new_customer_address" class="form-label">Address</label>
-                        <textarea class="form-control" id="new_customer_address" name="address"></textarea>
+                        <label for="new_address" class="form-label">Address</label>
+                        <textarea class="form-control" id="new_address" name="address"></textarea>
                     </div>
                 </form>
             </div>
@@ -172,131 +216,138 @@
 </div>
 
 <script>
+    // Robust Product Data Transfer
     const products = @json($products);
-    let rowCount = 0;
-    let currentTotal = 0;
+    const transactionType = "{{ request('type', 'sale') }}";
 
-    function addItem() {
-        const tbody = document.querySelector('#itemsTable tbody');
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>
-                <select name="items[${rowCount}][product_id]" class="form-select product-select" onchange="updatePrice(this)" required>
-                    <option value="">Select Product</option>
-                    ${products.map(p => `<option value="${p.id}" data-price="${p.sell_price}" data-buy-price="${p.buy_price}">${p.name} (Stock: ${p.stock})</option>`).join('')}
-                </select>
+    function getProductOptions() {
+        let options = '<option value="">Select Product...</option>';
+        products.forEach(p => {
+             // Determine price based on transaction type
+             let price = transactionType === 'purchase' ? p.buy_price : p.sell_price;
+             // Escape names to prevent JS breakage (basic protection)
+             const safeName = p.name.replace(/"/g, '&quot;');
+             options += `<option value="${p.id}" data-price="${price}">${safeName}</option>`;
+        });
+        return options;
+    }
+
+    var count = 1;
+
+    function new_link() {
+        count++;
+        var tr = document.createElement("tr");
+        tr.id = count;
+        tr.className = "product";
+        
+        var productOptions = getProductOptions();
+
+        var template = `
+            <th scope="row" class="product-id">${count}</th>
+            <td class="text-start">
+                <div class="mb-2">
+                     <select class="form-select bg-light border-0" name="items[${count-1}][product_id]" onchange="updatePrice(this)" required>
+                        ${productOptions}
+                    </select>
+                </div>
             </td>
             <td>
-                <input type="number" name="items[${rowCount}][quantity]" class="form-control qty-input" value="1" min="1" onchange="calculateRow(this)" required>
+                <input type="number" class="form-control product-price bg-light border-0" name="items[${count-1}][price]" step="100" placeholder="0" onchange="calculateTotal()" required />
             </td>
             <td>
-                <input type="number" name="items[${rowCount}][price]" class="form-control price-input" value="0" onchange="calculateRow(this)" required>
+                <div class="input-step">
+                    <button type="button" class='minus'>–</button>
+                    <input type="number" class="product-quantity" name="items[${count-1}][quantity]" value="1" min="1" onchange="calculateTotal()">
+                    <button type="button" class='plus'>+</button>
+                </div>
             </td>
-            <td>
-                <span class="subtotal fw-semibold">0</span>
+            <td class="text-end">
+                <div>
+                    <input type="text" class="form-control bg-light border-0 product-line-price" placeholder="Rp 0" readonly />
+                </div>
             </td>
-            <td>
-                <button type="button" class="btn btn-sm btn-soft-danger" onclick="this.closest('tr').remove(); calculateTotal()">
-                    <i class="ri-delete-bin-fill"></i>
-                </button>
+            <td class="product-removal">
+                <a href="javascript:void(0)" class="btn btn-success" onclick="removeItem(this)">Delete</a>
             </td>
         `;
-        tbody.appendChild(tr);
-        rowCount++;
+        tr.innerHTML = template;
+        document.getElementById("newlink").appendChild(tr);
+        calculateTotal(); 
+    }
+
+    function removeItem(btn) {
+        var row = btn.closest('tr');
+        row.remove();
+        calculateTotal();
+        // Renumber rows (Optional, but good for UI)
+        document.querySelectorAll('.product-id').forEach((el, index) => {
+            el.textContent = index + 1;
+        });
     }
 
     function updatePrice(select) {
-        const option = select.options[select.selectedIndex];
-        const row = select.closest('tr');
-        const priceInput = row.querySelector('.price-input');
-        const type = document.getElementById('type').value;
-        
-        if(type === 'sale') {
-             priceInput.value = option.dataset.price || 0;
-        } else {
-             priceInput.value = option.dataset.buyPrice || 0;
-        }
-        calculateRow(select);
+        var price = select.options[select.selectedIndex].getAttribute('data-price');
+        var row = select.closest('tr');
+        var priceInput = row.querySelector('.product-price');
+        if(price) priceInput.value = price;
+        calculateTotal();
     }
 
-    function calculateRow(element) {
-        const row = element.closest('tr');
-        const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
-        const price = parseFloat(row.querySelector('.price-input').value) || 0;
-        const subtotal = qty * price;
-        row.querySelector('.subtotal').textContent = subtotal.toLocaleString('id-ID');
+    function updateQty(btn, change) {
+        var input = btn.parentElement.querySelector('.product-quantity');
+        
+        // Ensure initial value is handled
+        var currentVal = parseInt(input.value) || 0;
+        var newVal = currentVal + change;
+        
+        if(newVal < 1) newVal = 1;
+        input.value = newVal;
         calculateTotal();
     }
 
     function calculateTotal() {
-        let subtotal = 0;
-        document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
-            const price = parseFloat(row.querySelector('.price-input').value) || 0;
-            subtotal += qty * price;
+        var subtotal = 0;
+        var rows = document.querySelectorAll('.product');
+        
+        rows.forEach(function(row) {
+            var price = parseFloat(row.querySelector('.product-price').value) || 0;
+            var qty = parseInt(row.querySelector('.product-quantity').value) || 0;
+            var lineTotal = price * qty;
+            subtotal += lineTotal;
+            
+            row.querySelector('.product-line-price').value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(lineTotal);
         });
 
-        const discountInput = document.getElementById('discount');
-        const discount = parseFloat(discountInput.value) || 0;
-        const total = Math.max(0, subtotal - discount);
-        
-        currentTotal = total;
-        document.getElementById('grandTotal').textContent = total.toLocaleString('id-ID');
-        
-        calculateChange();
+        document.getElementById('cart-subtotal').value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(subtotal);
+
+        var discount = parseFloat(document.getElementById('cart-discount').value) || 0;
+        var total = subtotal - discount;
+
+        document.getElementById('cart-total').value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
+        document.getElementById('total_amount_input').value = total;
     }
+
+    // Event Delegation for Plus/Minus buttons
+    // This handles both static and dynamically added rows
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('minus')) {
+            updateQty(e.target, -1);
+        } else if (e.target.classList.contains('plus')) {
+            updateQty(e.target, 1);
+        }
+    });
 
     function togglePaymentFields() {
-        const status = document.getElementById('payment_status').value;
-        const amountDiv = document.getElementById('amountPaidContainer');
-        const dateDiv = document.getElementById('dueDateContainer');
-        const amountInput = document.getElementById('amount_paid');
-        
-        if (status === 'unpaid') {
-            amountDiv.classList.add('d-none');
-            dateDiv.classList.remove('d-none');
-            amountInput.value = 0;
-        } else if (status === 'paid') {
-             amountDiv.classList.remove('d-none');
-             dateDiv.classList.add('d-none');
+        var status = document.getElementById('payment_status').value;
+        var section = document.getElementById('payment_details_section');
+        if (status === 'paid') {
+            section.style.display = 'none';
         } else {
-            amountDiv.classList.remove('d-none');
-            dateDiv.classList.remove('d-none');
-        }
-        calculateChange();
-    }
-
-    function calculateChange() {
-        const statusSelect = document.getElementById('payment_status');
-        const amountInput = document.getElementById('amount_paid');
-        const amountPaid = parseFloat(amountInput.value) || 0;
-        
-        const changeContainer = document.getElementById('changeContainer');
-        const changeDisplay = document.getElementById('changeDisplay');
-        const remainingContainer = document.getElementById('remainingContainer');
-        const remainingDisplay = document.getElementById('remainingDisplay');
-
-        const diff = amountPaid - currentTotal;
-
-        if (diff >= 0) {
-            changeContainer.classList.remove('d-none');
-            changeDisplay.textContent = diff.toLocaleString('id-ID');
-            remainingContainer.classList.add('d-none');
-        } else {
-            changeContainer.classList.add('d-none');
-            remainingContainer.classList.remove('d-none');
-            remainingDisplay.textContent = Math.abs(diff).toLocaleString('id-ID');
-        }
-        
-        if (statusSelect.value === 'unpaid') {
-             remainingContainer.classList.remove('d-none');
-             remainingDisplay.textContent = currentTotal.toLocaleString('id-ID');
-             changeContainer.classList.add('d-none');
+            section.style.display = 'block';
         }
     }
 
-    // Initialize with one row
-    addItem();
+    // Modal Logic
     function saveNewCustomer() {
         const form = document.getElementById('addCustomerForm');
         const formData = new FormData(form);
@@ -317,15 +368,15 @@
                 const select = document.getElementById('customer_id');
                 const option = new Option(data.customer.name, data.customer.id, true, true);
                 select.add(option);
-                
+
                 // Close modal
                 const modalElement = document.getElementById('addCustomerModal');
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 modal.hide();
-                
+
                 // Reset form
                 form.reset();
-                
+
                 // Show success message
                 alert('Customer added successfully!');
             } else {
@@ -337,5 +388,9 @@
             alert('Error adding customer. Please check input.');
         });
     }
+    
+    // Run on load
+    togglePaymentFields();
+    calculateTotal(); // Ensure totals are set on load
 </script>
 @endsection
