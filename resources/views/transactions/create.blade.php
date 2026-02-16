@@ -156,8 +156,9 @@
                     <div class="row mt-3" id="payment_details_section">
                         <div class="col-lg-4">
                             <div class="mb-2">
-                                <label for="amount_paid" class="form-label text-muted text-uppercase fw-semibold">Amount Paid (Bayar)</label>
-                                <input type="number" class="form-control bg-light border-0" id="amount_paid" name="amount_paid" placeholder="Enter amount paid" onkeyup="calculateChange()">
+                                <label for="amount_paid_display" class="form-label text-muted text-uppercase fw-semibold">Amount Paid (Bayar)</label>
+                                <input type="text" class="form-control bg-light border-0" id="amount_paid_display" placeholder="Rp 0" onkeyup="updateAmountPaid(this)">
+                                <input type="hidden" id="amount_paid" name="amount_paid">
                             </div>
                         </div>
                         <div class="col-lg-4">
@@ -377,6 +378,24 @@
         if (change < 0) change = 0; // Don't show negative change for partial
 
         document.getElementById('change_amount').value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(change);
+    }
+
+    function updateAmountPaid(element) {
+        // 1. Get raw value (digits only)
+        let value = element.value.replace(/[^0-9]/g, '');
+        
+        // 2. Update hidden input (for backend & calcs)
+        document.getElementById('amount_paid').value = value;
+        
+        // 3. Format display value (IDR currency)
+        if (value) {
+            element.value = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value).replace('Rp', 'Rp ').trim();
+        } else {
+            element.value = '';
+        }
+
+        // 4. Trigger calculations
+        calculateChange();
     }
 
     // Modal Logic
