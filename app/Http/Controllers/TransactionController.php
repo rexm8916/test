@@ -1,0 +1,152 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class TransactionController extends Controller
+{
+    public function index()
+    {
+        $transactions = \App\Models\Transaction::with('customer')->orderBy('transaction_date', 'desc')->latest()->paginate(10);
+        return view('transactions.index', compact('transactions'));
+    }
+
+    public function show($id)
+    {
+        $transaction = \App\Models\Transaction::with(['items.product', 'customer', 'debt.payments'])->findOrFail($id);
+        return view('transactions.show', compact('transaction'));
+    }
+
+    public function destroy($id)
+    {
+        $transaction = \App\Models\Transaction::with('items')->findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($transaction) {
+            // Revert Stock
+            foreach ($transaction->items as $item) {
+                $product = \App\Models\Product::find($item->product_id);
+                if ($product) {
+                    if ($transaction->type === 'purchase') {
+                        $product->decrement('stock', $item->quantity);
+                    }
+                    else {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+            }
+
+            // Delete transaction (Cascade will handle items, debts, payments if set, but let's rely on DB or Model events)
+            // If cascade is not set in migration, we might need manual delete.
+            // Based on typical Laravel migrations constrained() uses default reference which might not cascade depending on DB setup.
+            // Safest to rely on foreign key cascade if confirmed, or delete manually.
+            $transaction->delete();
+        });
+
+        return redirect()->route('transactions.index')->with('success', 'Transaction deleted and stock reverted.');
+    }
+
+    public function create()
+    {
+        $products = \App\Models\Product::all();
+        $customers = \App\Models\Customer::all();
+        return view('transactions.create', compact('products', 'customers'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:purchase,sale',
+            'transaction_date' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            // Discount validation
+            'discount' => 'nullable|numeric|min:0',
+            // Debt validation
+            'payment_status' => 'required|in:paid,partial,unpaid',
+            'amount_paid' => 'nullable|numeric|min:0',
+            'due_date' => 'nullable|date|required_if:payment_status,partial,unpaid',
+            'customer_id' => 'nullable|exists:customers,id|required_if:payment_status,partial,unpaid',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            // 1. Calculate Subtotal (Before Discount)
+            $subtotalAmount = 0;
+            foreach ($request->items as $item) {
+                $subtotalAmount += $item['quantity'] * $item['price'];
+            }
+
+            // 2. Apply Discount (Only for sales, but logic supports both if needed)
+            $discount = $request->discount ?? 0;
+            $totalAmount = max(0, $subtotalAmount - $discount);
+
+            // 3. Create Transaction
+            $transaction = \App\Models\Transaction::create([
+                'type' => $request->type,
+                'customer_id' => $request->customer_id,
+                'total_amount' => $totalAmount, // This is now Final Total
+                'discount' => $discount,
+                'transaction_date' => $request->transaction_date,
+                'status' => 'completed',
+            ]);
+
+            // 4. Create Items & Update Stock
+            foreach ($request->items as $itemData) {
+                $itemSubtotal = $itemData['quantity'] * $itemData['price'];
+
+                \App\Models\TransactionItem::create([
+                    'transaction_id' => $transaction->id,
+                    'product_id' => $itemData['product_id'],
+                    'quantity' => $itemData['quantity'],
+                    'price' => $itemData['price'],
+                    'subtotal' => $itemSubtotal,
+                ]);
+
+                // Update Stock
+                $product = \App\Models\Product::find($itemData['product_id']);
+                if ($request->type === 'purchase') {
+                    $product->increment('stock', $itemData['quantity']);
+                // Optional: Update buy price?
+                }
+                else {
+                    $product->decrement('stock', $itemData['quantity']);
+                }
+            }
+
+            // 5. Handle Debt/Payment
+            // Logic change: Use Final TotalAmount (after discount) for debt calc
+            if ($request->payment_status !== 'paid' && $request->type === 'sale') {
+                $amountPaid = $request->amount_paid ?? 0;
+                $debtStatus = ($amountPaid > 0) ? 'partial' : 'unpaid';
+
+                $debt = \App\Models\Debt::create([
+                    'transaction_id' => $transaction->id,
+                    'amount_total' => $totalAmount,
+                    'amount_paid' => $amountPaid,
+                    'status' => $debtStatus,
+                    'due_date' => $request->due_date,
+                ]);
+
+                // Record initial payment if any
+                if ($amountPaid > 0) {
+                    \App\Models\Payment::create([
+                        'debt_id' => $debt->id,
+                        'amount' => $amountPaid,
+                        'payment_date' => $request->transaction_date,
+                        'notes' => 'Initial payment',
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('dashboard')->with('success', 'Transaction recorded successfully.');
+    }
+
+    public function print($id)
+    {
+        $transaction = \App\Models\Transaction::with(['items.product', 'customer'])->findOrFail($id);
+        return view('transactions.print', compact('transaction'));
+    }
+}
