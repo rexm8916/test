@@ -40,14 +40,14 @@
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Management</span></li>
 
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('transactions.index') }}">
-                        <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Transactions</span>
+                    <a class="nav-link menu-link" href="{{ route('inventory.index') }}">
+                        <i class="ri-store-3-line"></i> <span data-key="t-inventory">Inventory Ledger</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('inventory.index') }}">
-                        <i class="ri-store-3-line"></i> <span data-key="t-inventory">Inventory Ledger</span>
+                    <a class="nav-link menu-link" href="{{ route('transactions.index') }}">
+                        <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Transactions</span>
                     </a>
                 </li>
 
