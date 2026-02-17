@@ -5,68 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaction #{{ $transaction->id }} - Print</title>
     <style>
+        @page {
+            size: 58mm auto;
+            margin: 0;
+        }
         body {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
+            font-size: 12px;
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 5px;
+            width: 58mm;
+            color: #000;
         }
         .container {
-            max-width: 300px; /* Thermal printer width approx */
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
         .store-name {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             margin: 0;
-        }
-        .store-sub {
-            font-size: 16px;
-            margin: 5px 0;
+            text-transform: uppercase;
         }
         .store-address {
-            font-size: 12px;
-            margin: 0;
+            font-size: 10px;
+            margin: 2px 0;
         }
         .divider {
-            border-top: 1px dashed #333;
-            margin: 10px 0;
+            border-top: 1px dashed #000;
+            margin: 5px 0;
         }
         .details {
-            margin-bottom: 10px;
+            font-size: 10px;
+            margin-bottom: 5px;
         }
         .item-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+            font-size: 11px;
         }
         .item-name {
             flex: 1;
+            padding-right: 5px;
         }
         .item-price {
             text-align: right;
+            white-space: nowrap;
         }
         .totals {
-            margin-top: 15px;
+            margin-top: 10px;
+            font-size: 11px;
         }
         .total-row {
             display: flex;
             justify-content: space-between;
             font-weight: bold;
+            font-size: 12px;
         }
         .footer {
             text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
+            margin-top: 15px;
+            font-size: 10px;
         }
         @media print {
             .no-print {
                 display: none;
+            }
+            body {
+                width: auto;
             }
         }
     </style>
@@ -107,36 +119,43 @@
         <div class="divider"></div>
 
         <div class="totals">
-            @if($transaction->discount > 0)
+        <div class="totals">
             <div class="item-row">
-                <div>Subtotal</div>
-                <div>{{ number_format($transaction->total_amount + $transaction->discount, 0, ',', '.') }}</div>
+                <div>Sub Total</div>
+                <div>Rp {{ number_format($transaction->total_amount + $transaction->discount, 0, ',', '.') }}</div>
             </div>
             <div class="item-row">
                 <div>Discount</div>
-                <div>-{{ number_format($transaction->discount, 0, ',', '.') }}</div>
+                <div>- Rp {{ number_format($transaction->discount, 0, ',', '.') }}</div>
             </div>
-            @endif
-            <div class="total-row">
-                <div>TOTAL</div>
+            
+            <div class="total-row" style="margin-top: 5px; border-top: 1px dashed #333; padding-top: 5px;">
+                <div>Total Amount</div>
                 <div>Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</div>
             </div>
+
             @if($transaction->debt)
             <div class="item-row" style="margin-top: 5px;">
-                <div>Paid</div>
-                <div>{{ number_format($transaction->debt->amount_paid, 0, ',', '.') }}</div>
+                <div>Amount Paid (Bayar)</div>
+                <div>Rp {{ number_format($transaction->debt->amount_paid, 0, ',', '.') }}</div>
             </div>
             <div class="item-row">
-                <div>Unpaid</div>
-                <div>{{ number_format($transaction->debt->amount_total - $transaction->debt->amount_paid, 0, ',', '.') }}</div>
+                <div>Change (Kembalian)</div>
+                <div>Rp {{ number_format(max(0, $transaction->debt->amount_paid - $transaction->debt->amount_total), 0, ',', '.') }}</div>
             </div>
+            @if($transaction->debt->status !== 'paid')
+            <div class="item-row">
+                <div>Remaining</div>
+                <div>Rp {{ number_format($transaction->debt->amount_total - $transaction->debt->amount_paid, 0, ',', '.') }}</div>
+            </div>
+            @endif
             @endif
         </div>
 
         <div class="divider"></div>
 
         <div class="footer">
-            <p>terimakasih telah belanja di toko kami</p>
+            <p>Terima Kasih Telah Berbelanja Di Toko Kami</p>
         </div>
 
         <button class="no-print" onclick="window.print()" style="display: block; width: 100%; padding: 10px; margin-top: 20px; cursor: pointer;">Print Again</button>

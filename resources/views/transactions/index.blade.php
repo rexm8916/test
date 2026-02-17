@@ -22,15 +22,66 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-header d-flex align-items-center">
-                <h5 class="card-title mb-0 flex-grow-1">Transaction History</h5>
+                <h5 class="card-title mb-0 flex-grow-1">
+                    @if(request('type') == 'sale')
+                        Sales History (Penjualan)
+                    @elseif(request('type') == 'purchase')
+                        Purchase History (Pembelian)
+                    @else
+                        Transaction History
+                    @endif
+                </h5>
                 <div>
+                    @if(request('type') != 'purchase')
                      <a href="{{ route('transactions.create', ['type' => 'sale']) }}" class="btn btn-success add-btn">
                         <i class="ri-add-line align-bottom me-1"></i> New Sale
                     </a>
+                    @endif
+                    @if(request('type') != 'sale')
                     <a href="{{ route('transactions.create', ['type' => 'purchase']) }}" class="btn btn-info add-btn">
                         <i class="ri-add-line align-bottom me-1"></i> New Purchase
                     </a>
+                    @endif
                 </div>
+            </div>
+            <div class="card-body border-bottom-dashed border-bottom">
+                <form method="GET" action="{{ route('transactions.index') }}">
+                    <div class="row g-3">
+                        <div class="col-xl-3 col-sm-6">
+                            <div class="search-box">
+                                <input type="text" class="form-control search flatpickr-date" name="start_date" value="{{ request('start_date') }}" placeholder="Start Date (dd-mm-yyyy)">
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6">
+                            <div class="search-box">
+                                <input type="text" class="form-control search flatpickr-date" name="end_date" value="{{ request('end_date') }}" placeholder="End Date (dd-mm-yyyy)">
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6">
+                            <div class="search-box">
+                                <select class="form-control" name="customer_id">
+                                    <option value="">
+                                        @if(request('type') == 'sale')
+                                            Filter Customer
+                                        @elseif(request('type') == 'purchase')
+                                            Filter Supplier
+                                        @else
+                                            All Customers/Suppliers
+                                        @endif
+                                    </option>
+                                    @foreach($customers as $customer)
+                                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6">
+                            <div>
+                                <button type="submit" class="btn btn-primary w-100"> <i class="ri-equalizer-fill me-1 align-bottom"></i> Filter</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -48,7 +99,7 @@
                         <tbody>
                             @forelse($transactions as $transaction)
                             <tr>
-                                <td>{{ $transaction->transaction_date->format('d M Y') }}</td>
+                                <td>{{ $transaction->transaction_date->format('d-m-Y') }}</td>
                                 <td>
                                     @if($transaction->type === 'sale')
                                         <span class="badge bg-success-subtle text-success text-uppercase">Sale</span>
@@ -74,22 +125,20 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="dropdown d-inline-block">
-                                        <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="ri-more-fill align-middle"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a href="{{ route('transactions.show', $transaction->id) }}" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
-                                            <li>
-                                                <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="dropdown-item remove-item-btn">
-                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('transactions.show', $transaction->id) }}" class="btn btn-sm btn-primary">
+                                            <i class="ri-eye-fill"></i>
+                                        </a>
+                                        <a href="{{ route('transactions.print', $transaction->id) }}" target="_blank" class="btn btn-sm btn-warning">
+                                            <i class="ri-printer-fill"></i>
+                                        </a>
+                                        <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="ri-delete-bin-fill"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -108,4 +157,17 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        flatpickr(".flatpickr-date", {
+            dateFormat: "Y-m-d", // Format sent to server
+            altInput: true,
+            altFormat: "d-m-Y", // Format displayed to user
+            allowInput: true
+        });
+    });
+</script>
 @endsection

@@ -6,10 +6,37 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transactions = \App\Models\Transaction::with('customer')->orderBy('transaction_date', 'desc')->latest()->paginate(10);
-        return view('transactions.index', compact('transactions'));
+        $query = \App\Models\Transaction::with('customer');
+
+        if ($request->start_date) {
+            $query->whereDate('transaction_date', '>=', $request->start_date);
+        }
+
+        if ($request->end_date) {
+            $query->whereDate('transaction_date', '<=', $request->end_date);
+        }
+
+        if ($request->customer_id) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        if ($request->type) {
+            $query->where('type', $request->type);
+        }
+
+        $transactions = $query->orderBy('transaction_date', 'desc')->latest()->paginate(10);
+        $customersQuery = \App\Models\Customer::orderBy('name');
+        if ($request->type == 'sale') {
+            $customersQuery->where('type', 'customer');
+        }
+        elseif ($request->type == 'purchase') {
+            $customersQuery->where('type', 'supplier');
+        }
+        $customers = $customersQuery->get();
+
+        return view('transactions.index', compact('transactions', 'customers'));
     }
 
     public function show($id)

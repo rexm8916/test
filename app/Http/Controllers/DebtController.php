@@ -8,14 +8,18 @@ class DebtController extends Controller
 {
     public function index()
     {
-        $debts = \App\Models\Debt::with('transaction.customer')->orderBy('created_at', 'desc')->get();
+        $debts = \App\Models\Debt::with('transaction.customer')
+            ->where('status', '!=', 'paid')
+            ->orderBy('created_at', 'desc')
+            ->get();
         return view('debts.index', compact('debts'));
     }
 
     public function show($id)
     {
         $debt = \App\Models\Debt::with(['transaction.customer', 'transaction.items.product', 'payments'])->findOrFail($id);
-        return view('debts.show', compact('debt'));
+        $maxPayment = $debt->amount_total - $debt->amount_paid;
+        return view('debts.show', compact('debt', 'maxPayment'));
     }
 
     public function storePayment(Request $request, $id)

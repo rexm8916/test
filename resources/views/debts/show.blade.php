@@ -134,9 +134,7 @@
                         <label for="amount" class="form-label">Amount (Rp)</label>
                         <input type="text" id="amount_display" class="form-control" oninput="formatNumber(this)" data-max="{{ $maxPayment }}" required>
                         <input type="hidden" name="amount" id="amount">
-                         @php
-                            $maxPayment = $debt->amount_total - $debt->amount_paid;
-                        @endphp
+
                         <div class="form-text">Max allowed: Rp {{ number_format($maxPayment, 0, ',', '.') }}</div>
                     </div>
                     <div class="mb-3">

@@ -29,6 +29,11 @@
                     <a href="{{ route('transactions.print', $transaction->id) }}" target="_blank" class="btn btn-soft-primary btn-sm">
                         <i class="ri-printer-line align-bottom me-1"></i> Print Receipt
                     </a>
+                    @if($transaction->debt)
+                    <a href="{{ route('debts.show', $transaction->debt->id) }}" class="btn btn-soft-info btn-sm">
+                        <i class="ri-history-line align-bottom me-1"></i> View Debt History
+                    </a>
+                    @endif
                      <span class="badge {{ $transaction->type === 'sale' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} fs-12">
                         {{ ucfirst($transaction->type) }}
                     </span>
@@ -50,13 +55,7 @@
                                 {{ ucfirst($transaction->debt->status) }}
                             </span>
                              <div class="mt-2 text-muted">
-                                <p class="mb-1">Total Amount: <span class="fw-semibold">Rp {{ number_format($transaction->debt->amount_total, 0, ',', '.') }}</span></p>
-                                <p class="mb-1">Amount Paid: <span class="fw-semibold">Rp {{ number_format($transaction->debt->amount_paid, 0, ',', '.') }}</span></p>
-                                @if($transaction->debt->amount_paid > $transaction->debt->amount_total)
-                                    <p class="mb-1 text-success">Change: <span class="fw-bold">Rp {{ number_format($transaction->debt->amount_paid - $transaction->debt->amount_total, 0, ',', '.') }}</span></p>
-                                @endif
                                 @if($transaction->debt->status !== 'paid')
-                                    <p class="mb-1 text-danger">Remaining: <span class="fw-semibold">Rp {{ number_format($transaction->debt->amount_total - $transaction->debt->amount_paid, 0, ',', '.') }}</span></p>
                                      <a href="{{ route('debts.show', $transaction->debt->id) }}" class="link-primary text-decoration-underline">View Debt Details</a>
                                 @endif
                              </div>
@@ -85,20 +84,34 @@
                                 <td class="text-end">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
-                            @if($transaction->discount > 0)
                             <tr class="border-top border-top-dashed">
-                                <td colspan="3" class="text-end fw-medium">Subtotal</td>
+                                <td colspan="3" class="text-end fw-medium">Sub Total</td>
                                 <td class="text-end text-muted">Rp {{ number_format($transaction->total_amount + $transaction->discount, 0, ',', '.') }}</td>
                             </tr>
                             <tr>
                                 <td colspan="3" class="text-end fw-medium text-danger">Discount</td>
                                 <td class="text-end text-danger">- Rp {{ number_format($transaction->discount, 0, ',', '.') }}</td>
                             </tr>
-                            @endif
                             <tr class="border-top border-top-dashed">
-                                <td colspan="3" class="text-end fw-bold">Grand Total</td>
+                                <td colspan="3" class="text-end fw-bold">Total Amount</td>
                                 <td class="text-end fw-bold">Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</td>
                             </tr>
+                            @if($transaction->debt)
+                            <tr>
+                                <td colspan="3" class="text-end fw-medium">Amount Paid (Bayar)</td>
+                                <td class="text-end fw-medium">Rp {{ number_format($transaction->debt->amount_paid, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end fw-medium text-success">Change (Kembalian)</td>
+                                <td class="text-end fw-bold text-success">Rp {{ number_format(max(0, $transaction->debt->amount_paid - $transaction->debt->amount_total), 0, ',', '.') }}</td>
+                            </tr>
+                            @if($transaction->debt->status !== 'paid')
+                            <tr>
+                                <td colspan="3" class="text-end fw-medium text-danger">Remaining</td>
+                                <td class="text-end fw-bold text-danger">Rp {{ number_format($transaction->debt->amount_total - $transaction->debt->amount_paid, 0, ',', '.') }}</td>
+                            </tr>
+                            @endif
+                            @endif
                         </tbody>
                     </table>
                 </div>

@@ -46,8 +46,8 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{{ route('transactions.index') }}">
-                        <i class="ri-exchange-dollar-line"></i> <span data-key="t-transactions">Transactions</span>
+                    <a class="nav-link menu-link" href="{{ route('transactions.index', ['type' => 'sale']) }}">
+                        <i class="ri-exchange-dollar-line"></i> <span data-key="t-sales">Sales (Penjualan)</span>
                     </a>
                 </li>
 
@@ -62,6 +62,13 @@
                         <i class="ri-user-line"></i> <span data-key="t-customers">Customers</span>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('transactions.index', ['type' => 'purchase']) }}">
+                        <i class="ri-shopping-cart-line"></i> <span data-key="t-purchases">Purchases (Pembelian)</span>
+                    </a>
+                </li>
+
                  <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('products.index') }}">
                         <i class="ri-shopping-bag-3-line"></i> <span data-key="t-products">Products</span>
