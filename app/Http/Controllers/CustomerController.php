@@ -39,4 +39,34 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')
             ->with('success', 'Customer created successfully.');
     }
+    public function edit($id)
+    {
+        $customer = \App\Models\Customer::findOrFail($id);
+        return view('customers.edit', compact('customer'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required',
+            'contact' => 'nullable',
+            'address' => 'nullable',
+            'type' => 'required|in:customer,supplier',
+        ]);
+
+        $customer = \App\Models\Customer::findOrFail($id);
+        $customer->update($request->all());
+
+        return redirect()->route('customers.index')
+            ->with('success', 'Customer updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $customer = \App\Models\Customer::findOrFail($id);
+        $customer->delete();
+
+        return redirect()->route('customers.index')
+            ->with('success', 'Customer deleted successfully.');
+    }
 }

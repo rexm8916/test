@@ -64,7 +64,7 @@
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a href="{{ route('products.edit', $product->id) }}" class="dropdown-item"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
                                             <li>
-                                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="delete-form">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item remove-item-btn">

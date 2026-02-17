@@ -56,9 +56,18 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('debts.show', $debt->id) }}" class="btn btn-sm btn-primary">
-                                        Details & Pay
-                                    </a>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('debts.show', $debt->id) }}" class="btn btn-sm btn-primary">
+                                            Details & Pay
+                                        </a>
+                                        <form action="{{ route('debts.destroy', $debt->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-soft-danger">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             @empty

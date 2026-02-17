@@ -158,11 +158,7 @@ class TransactionController extends Controller
             return $transaction;
         });
 
-        if ($request->payment_status == 'paid') {
-            return redirect()->route('transactions.show', $transaction->id)->with('success', 'Transaction recorded successfully.');
-        }
-
-        return redirect()->route('dashboard')->with('success', 'Transaction recorded successfully.');
+        return redirect()->route('transactions.show', $transaction->id)->with('success', 'Transaction recorded successfully.');
     }
 
     public function print($id)

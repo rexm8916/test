@@ -448,21 +448,33 @@
         // Block if Customer/Supplier is not selected
         if (customerSelect.value === "") {
             event.preventDefault();
-            alert("Please select a valid " + (transactionType === 'purchase' ? 'Supplier' : 'Customer') + ".");
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "Please select a valid " + (transactionType === 'purchase' ? 'Supplier' : 'Customer') + "."
+            });
             return;
         }
 
         // Block Paid if Amount < Total
         if (status === 'paid' && paid < total) {
             event.preventDefault();
-            alert("Amount Paid (Bayar) is less than Total Amount.\nPlease change Payment Status to 'Partial' or 'Unpaid', or enter the correct amount.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Error',
+                text: "Amount Paid (Bayar) is less than Total Amount. Please change Payment Status to 'Partial' or 'Unpaid', or enter the correct amount."
+            });
             return;
         }
 
         // Block Unpaid/Partial if Customer is Empty or Umum
         if ((status === 'unpaid' || status === 'partial') && (customerSelect.value === "" || customerName.includes('umum') || customerName.includes('walk-in'))) {
             event.preventDefault();
-            alert("For Unpaid or Partial transactions, you must select a valid Customer (Cannot be Umum/Walk-in).");
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Customer',
+                text: "For Unpaid or Partial transactions, you must select a valid Customer (Cannot be Umum/Walk-in)."
+            });
             return;
         }
     });

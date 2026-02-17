@@ -81,7 +81,7 @@
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a href="{{ route('transactions.show', $transaction->id) }}" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
                                             <li>
-                                                <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                                <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="delete-form">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="dropdown-item remove-item-btn">

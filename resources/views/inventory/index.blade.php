@@ -74,7 +74,7 @@
                                         <a href="{{ route('inventory.edit', $ledger->id) }}" class="btn btn-sm btn-soft-info">
                                             <i class="ri-pencil-line"></i>
                                         </a>
-                                        <form action="{{ route('inventory.destroy', $ledger->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+                                        <form action="{{ route('inventory.destroy', $ledger->id) }}" method="POST" class="delete-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-soft-danger">

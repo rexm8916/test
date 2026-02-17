@@ -51,4 +51,11 @@ class DebtController extends Controller
         return redirect()->route('debts.show', $debt->id)
             ->with('success', 'Payment recorded successfully.');
     }
+    public function destroy($id)
+    {
+        $debt = \App\Models\Debt::findOrFail($id);
+        $debt->delete();
+
+        return redirect()->route('debts.index')->with('success', 'Debt record deleted successfully.');
+    }
 }

@@ -80,6 +80,7 @@
                                 <th>Date</th>
                                 <th>Amount</th>
                                 <th>Notes</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -88,6 +89,20 @@
                                 <td>{{ $payment->payment_date->format('d M Y') }}</td>
                                 <td class="text-success fw-semibold">Rp {{ number_format($payment->amount, 0, ',', '.') }}</td>
                                 <td>{{ $payment->notes ?? '-' }}</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('payments.edit', $payment->id) }}" class="btn btn-sm btn-soft-info">
+                                            <i class="ri-pencil-line"></i>
+                                        </a>
+                                        <form action="{{ route('payments.destroy', $payment->id) }}" method="POST" class="delete-form">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-soft-danger">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                             @empty
                             <tr>
@@ -113,11 +128,16 @@
                 </div>
 
                 @if($debt->status !== 'paid')
-                <form action="{{ route('debts.payment.store', $debt->id) }}" method="POST">
+                <form action="{{ route('debts.payment.store', $debt->id) }}" method="POST" id="record_payment_form">
                     @csrf
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount (Rp)</label>
-                        <input type="number" name="amount" id="amount" max="{{ $debt->amount_total - $debt->amount_paid }}" class="form-control" required>
+                        <input type="text" id="amount_display" class="form-control" oninput="formatNumber(this)" data-max="{{ $maxPayment }}" required>
+                        <input type="hidden" name="amount" id="amount">
+                         @php
+                            $maxPayment = $debt->amount_total - $debt->amount_paid;
+                        @endphp
+                        <div class="form-text">Max allowed: Rp {{ number_format($maxPayment, 0, ',', '.') }}</div>
                     </div>
                     <div class="mb-3">
                         <label for="payment_date" class="form-label">Payment Date</label>
@@ -140,4 +160,43 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function formatNumber(input) {
+        // Remove non-numeric characters
+        let value = input.value.replace(/[^0-9]/g, '');
+        
+        // Convert to integer for formatting (if not empty)
+        if (value) {
+            value = parseInt(value, 10);
+            // Format back to 1.000 structure
+            input.value = new Intl.NumberFormat('id-ID').format(value);
+        } else {
+            input.value = '';
+        }
+    }
+
+    // On form submit, clean the value and validate
+    document.getElementById('record_payment_form').addEventListener('submit', function(e) {
+        let amountInput = document.getElementById('amount_display');
+        if (amountInput) {
+            let cleanValue = parseInt(amountInput.value.replace(/\./g, '')) || 0;
+            let maxAmount = parseInt(amountInput.getAttribute('data-max')) || 0;
+
+            if (cleanValue > maxAmount) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Amount',
+                    text: 'Amount cannot be greater than Rp ' + new Intl.NumberFormat('id-ID').format(maxAmount)
+                });
+                return;
+            }
+
+            document.getElementById('amount').value = cleanValue;
+        }
+    });
+</script>
 @endsection
