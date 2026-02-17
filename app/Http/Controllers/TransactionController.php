@@ -98,7 +98,7 @@ class TransactionController extends Controller
                 'customer_id' => $request->customer_id,
                 'total_amount' => $totalAmount, // This is now Final Total
                 'discount' => $discount,
-                'transaction_date' => $request->transaction_date,
+                'transaction_date' => $request->transaction_date . ' ' . now()->format('H:i:s'),
                 'status' => 'completed',
             ]);
 

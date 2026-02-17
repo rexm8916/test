@@ -74,9 +74,10 @@
 <body onload="window.print()">
     <div class="container">
         <div class="header">
-            <h1 class="store-name">RizkiMandiri</h1>
-            <p class="store-sub">BERAS LEMBANG</p>
-            <p class="store-address">jl lembang bandung barat</p>
+            <h1 class="store-name">Toko Beras Rizki Mandiri</h1>
+            <p class="store-address">Jl Wangunsari RT 03 RW 03, Kecamatan Lembang</p>
+            <p class="store-address">Kabupaten Bandung Barat, Jawa Barat 40391</p>
+            <p class="store-address">Telp/WA: 085659145523</p>
         </div>
 
         <div class="divider"></div>

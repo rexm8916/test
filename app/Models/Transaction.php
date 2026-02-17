@@ -9,7 +9,7 @@ class Transaction extends Model
     protected $fillable = ['type', 'customer_id', 'total_amount', 'discount', 'transaction_date', 'status'];
 
     protected $casts = [
-        'transaction_date' => 'date',
+        'transaction_date' => 'datetime',
     ];
 
     public function customer()
