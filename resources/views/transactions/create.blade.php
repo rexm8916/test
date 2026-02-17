@@ -55,7 +55,7 @@
                             <label for="customer_id" class="text-muted text-uppercase fw-semibold">{{ request('type') == 'purchase' ? 'Supplier' : 'Customer' }}</label>
                              <div class="input-group">
                                 <select class="form-select bg-light border-0" id="customer_id" name="customer_id">
-                                    <option value="">{{ request('type') == 'purchase' ? 'Select Supplier' : 'Walk-in Customer / Select Customer' }}</option>
+                                    <option value="">{{ request('type') == 'purchase' ? 'Select Supplier' : 'Select Customer' }}</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                                     @endforeach
@@ -444,6 +444,13 @@
         var customerSelect = document.getElementById('customer_id');
         var selectedOption = customerSelect.options[customerSelect.selectedIndex];
         var customerName = selectedOption ? selectedOption.text.toLowerCase() : '';
+
+        // Block if Customer/Supplier is not selected
+        if (customerSelect.value === "") {
+            event.preventDefault();
+            alert("Please select a valid " + (transactionType === 'purchase' ? 'Supplier' : 'Customer') + ".");
+            return;
+        }
 
         // Block Paid if Amount < Total
         if (status === 'paid' && paid < total) {
