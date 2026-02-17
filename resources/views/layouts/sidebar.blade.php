@@ -46,6 +46,12 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('inventory.index') }}">
+                        <i class="ri-store-3-line"></i> <span data-key="t-inventory">Inventory Ledger</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('debts.index') }}">
                         <i class="ri-book-mark-line"></i> <span data-key="t-debts">Debts (Piutang)</span>
                     </a>
