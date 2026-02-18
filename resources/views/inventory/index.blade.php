@@ -1,12 +1,12 @@
 @extends('layouts.velzon')
 
-@section('title', 'Inventory Value Ledger')
+@section('title', 'Buku Penjualan Manual')
 
 @section('content')
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Buku Stok Inventaris</h4>
+            <h4 class="mb-sm-0">Buku Penjualan Manual</h4>
             <div class="page-title-right">
                 <a href="{{ route('inventory.create') }}" class="btn btn-success btn-sm">
                     <i class="ri-add-line align-bottom me-1"></i> Tambah Entri

@@ -37,13 +37,16 @@
                     </a>
                 </li>
 
-                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Manajemen</span></li>
+                
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Pembukuan</span></li>
 
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('inventory.index') }}">
-                        <i class="ri-store-3-line"></i> <span data-key="t-inventory">Buku Stok</span>
+                        <i class="ri-store-3-line"></i> <span data-key="t-inventory">Buku penjualan manual</span>
                     </a>
                 </li>
+
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Management</span></li>
 
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('transactions.index', ['type' => 'sale']) }}">

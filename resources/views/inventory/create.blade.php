@@ -1,6 +1,6 @@
 @extends('layouts.velzon')
 
-@section('title', 'Add Inventory Entry')
+@section('title', 'Tambah Entri Buku Penjualan Manual')
 
 @section('content')
 <div class="row justify-content-center">
@@ -85,9 +85,9 @@
             amountField.style.display = 'block';
             
             if (type === 'sale') {
-                amountLabel.innerText = 'Sales Amount (Out)';
+                amountLabel.innerText = 'Jumlah Penjualan (Keluar)';
             } else {
-                amountLabel.innerText = 'Initial Balance Amount';
+                amountLabel.innerText = 'Jumlah Saldo Awal';
             }
         }
     }
