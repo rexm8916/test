@@ -29,6 +29,9 @@
                     <a href="{{ route('transactions.print', $transaction->id) }}" target="_blank" class="btn btn-soft-primary btn-sm">
                         <i class="ri-printer-line align-bottom me-1"></i> Cetak Struk
                     </a>
+                    <button type="button" onclick="shareReceipt()" class="btn btn-soft-success btn-sm">
+                        <i class="ri-whatsapp-line align-bottom me-1"></i> Share Struk
+                    </button>
                     @if($transaction->debt)
                     <a href="{{ route('debts.show', $transaction->debt->id) }}" class="btn btn-soft-info btn-sm">
                         <i class="ri-history-line align-bottom me-1"></i> Lihat Riwayat Hutang
@@ -128,6 +131,126 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+@section('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    function shareReceipt() {
+        const shareBtn = document.querySelector('button[onclick="shareReceipt()"]');
+        const originalText = shareBtn.innerHTML;
+        shareBtn.innerHTML = '<i class="ri-loader-4-line align-bottom me-1"></i> Generating...';
+        shareBtn.disabled = true;
+
+        // Make the receipt visible for capture (off-screen)
+        const receipt = document.getElementById('receipt-container');
+        receipt.style.display = 'block';
+
+        html2canvas(receipt, {
+            scale: 2,
+            backgroundColor: '#ffffff'
+        }).then(canvas => {
+            canvas.toBlob(blob => {
+                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'struk.png', { type: blob.type })] })) {
+                    const file = new File([blob], 'struk-{{ $transaction->id }}.png', { type: 'image/png' });
+                    navigator.share({
+                        files: [file],
+                        title: 'Struk Transaksi #{{ $transaction->id }}',
+                        text: 'Berikut adalah struk transaksi Anda.'
+                    }).catch(err => {
+                        console.error('Share failed:', err);
+                        downloadImage(canvas);
+                    });
+                 } else {
+                     downloadImage(canvas);
+                 }
+                 
+                 // Hide receipt again
+                 receipt.style.display = 'none';
+                 shareBtn.innerHTML = originalText;
+                 shareBtn.disabled = false;
+            });
+        }).catch(err => {
+             console.error('Canvas generation failed:', err);
+             alert('Gagal membuat gambar struk via html2canvas');
+             receipt.style.display = 'none';
+             shareBtn.innerHTML = originalText;
+             shareBtn.disabled = false;
+        });
+    }
+
+    function downloadImage(canvas) {
+        const link = document.createElement('a');
+        link.download = 'struk-{{ $transaction->id }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        alert('Gambar struk telah diunduh. Silakan kirim melalui WhatsApp.');
+    }
+</script>
+@endsection
+
+<!-- Hidden Receipt Container for Catching -->
+<div id="receipt-container" style="display: none; position: absolute; top: 0; left: -9999px; width: 58mm; padding: 10px; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 12px;">
+    <div style="text-align: center; margin-bottom: 10px;">
+        <h1 style="font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase;">Toko Beras Rizki Mandiri</h1>
+        <p style="font-size: 10px; margin: 2px 0;">Jl Wangunsari RT 03 RW 03, Kecamatan Lembang</p>
+        <p style="font-size: 10px; margin: 2px 0;">Kabupaten Bandung Barat, Jawa Barat 40391</p>
+        <p style="font-size: 10px; margin: 2px 0;">Telp/WA: 085659145523</p>
+    </div>
+    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+    <div style="font-size: 10px; margin-bottom: 5px;">
+        <div>Tanggal: {{ $transaction->transaction_date->format('d/m/Y H:i') }}</div>
+        <div>ID Trx: #{{ $transaction->id }}</div>
+        <div>Plgn: {{ $transaction->customer->name ?? 'Umum' }}</div>
+    </div>
+    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+    <div>
+        @foreach($transaction->items as $item)
+        <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 11px;">
+            <div style="flex: 1; padding-right: 5px;">
+                {{ $item->product->name }}<br>
+                <small>{{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}</small>
+            </div>
+            <div style="text-align: right; white-space: nowrap;">
+                {{ number_format($item->subtotal, 0, ',', '.') }}
+            </div>
+        </div>
+        @endforeach
+    </div>
+    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+    <div style="margin-top: 10px; font-size: 11px;">
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px;">
+            <div>Sub Total</div>
+            <div>Rp {{ number_format($transaction->total_amount + $transaction->discount, 0, ',', '.') }}</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px;">
+            <div>Diskon</div>
+            <div>- Rp {{ number_format($transaction->discount, 0, ',', '.') }}</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 5px; border-top: 1px dashed #333; padding-top: 5px;">
+            <div>Total Tagihan</div>
+            <div>Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</div>
+        </div>
+        @if($transaction->debt)
+        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <div>Jumlah Dibayar</div>
+            <div>Rp {{ number_format($transaction->debt->amount_paid, 0, ',', '.') }}</div>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <div>Kembalian</div>
+            <div>Rp {{ number_format(max(0, $transaction->debt->amount_paid - $transaction->debt->amount_total), 0, ',', '.') }}</div>
+        </div>
+        @if($transaction->debt->status !== 'paid')
+        <div style="display: flex; justify-content: space-between;">
+            <div>Sisa</div>
+            <div>Rp {{ number_format($transaction->debt->amount_total - $transaction->debt->amount_paid, 0, ',', '.') }}</div>
+        </div>
+        @endif
+        @endif
+    </div>
+    <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+    <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+        <p>Terima Kasih Telah Berbelanja Di Toko Kami</p>
     </div>
 </div>
 @endsection

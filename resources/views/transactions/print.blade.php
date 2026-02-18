@@ -159,7 +159,63 @@
         </div>
 
         <button class="no-print" onclick="window.print()" style="display: block; width: 100%; padding: 10px; margin-top: 20px; cursor: pointer;">Cetak Lagi</button>
+        <button class="no-print" id="shareBtn" onclick="shareReceipt()" style="display: block; width: 100%; padding: 10px; margin-top: 10px; cursor: pointer; background-color: #25D366; color: white; border: none;">Download/Share Struk (Image)</button>
         <a href="{{ route('transactions.show', $transaction->id) }}" class="no-print" style="display: block; text-align: center; margin-top: 10px; text-decoration: none; color: blue;">Kembali</a>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function shareReceipt() {
+             const shareBtn = document.getElementById('shareBtn');
+             const originalText = shareBtn.innerText;
+             shareBtn.innerText = 'Generating...';
+             shareBtn.disabled = true;
+
+             // Select the container to capture
+             const element = document.querySelector('.container');
+             
+             // Use html2canvas to generate the image
+             html2canvas(element, {
+                 scale: 2, // Higher scale for better quality
+                 backgroundColor: '#ffffff',
+                 ignoreElements: (node) => {
+                     return node.classList && node.classList.contains('no-print');
+                 }
+             }).then(canvas => {
+                 canvas.toBlob(blob => {
+                     if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'struk.png', { type: blob.type })] })) {
+                        // Use Web Share API if supported
+                        const file = new File([blob], 'struk-{{ $transaction->id }}.png', { type: 'image/png' });
+                        navigator.share({
+                            files: [file],
+                            title: 'Struk Transaksi #{{ $transaction->id }}',
+                            text: 'Berikut adalah struk transaksi Anda.'
+                        }).catch(err => {
+                            console.error('Share failed:', err);
+                            downloadImage(canvas);
+                        });
+                     } else {
+                         // Fallback to download
+                         downloadImage(canvas);
+                     }
+                     
+                     shareBtn.innerText = originalText;
+                     shareBtn.disabled = false;
+                 });
+             }).catch(err => {
+                 console.error('Canvas generation failed:', err);
+                 alert('Gagal membuat gambar struk via html2canvas');
+                 shareBtn.innerText = originalText;
+                 shareBtn.disabled = false;
+             });
+        }
+
+        function downloadImage(canvas) {
+            const link = document.createElement('a');
+            link.download = 'struk-{{ $transaction->id }}.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            alert('Gambar struk telah diunduh. Silakan kirim melalui WhatsApp.');
+        }
+    </script>
 </body>
 </html>
