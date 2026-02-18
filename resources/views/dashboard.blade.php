@@ -119,25 +119,36 @@
 
 
 <div class="row">
-    <div class="col-xl-12">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header border-0 align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Stok Produk (15 Terendah)</h4>
+            </div>
+            <div class="card-body">
+                <div id="stockChart" style="height: 350px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
         <div class="card">
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Aksi Cepat</h4>
             </div><!-- end card header -->
 
             <div class="card-body">
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ route('products.create') }}" class="btn btn-primary">
-                        <i class="ri-add-line align-bottom me-1"></i> Tambah Produk
+                <div class="d-flex flex-column gap-3">
+                    <a href="{{ route('products.create') }}" class="btn btn-soft-primary w-100 text-start">
+                        <i class="ri-add-line align-bottom me-1"></i> Tambah Produk Baru
                     </a>
-                    <a href="{{ route('transactions.create', ['type' => 'sale']) }}" class="btn btn-success">
-                        <i class="ri-shopping-cart-2-line align-bottom me-1"></i> Penjualan Baru
+                    <a href="{{ route('transactions.create', ['type' => 'sale']) }}" class="btn btn-soft-success w-100 text-start">
+                        <i class="ri-shopping-cart-2-line align-bottom me-1"></i> Kasir / Penjualan Baru
                     </a>
-                    <a href="{{ route('transactions.create', ['type' => 'purchase']) }}" class="btn btn-info">
-                        <i class="ri-download-2-line align-bottom me-1"></i> Pembelian Baru
+                    <a href="{{ route('transactions.create', ['type' => 'purchase']) }}" class="btn btn-soft-info w-100 text-start">
+                        <i class="ri-download-2-line align-bottom me-1"></i> Input Pembelian Stok
                     </a>
-                     <a href="{{ route('debts.index') }}" class="btn btn-warning">
-                        <i class="ri-money-dollar-circle-line align-bottom me-1"></i> Catat Pembayaran
+                     <a href="{{ route('debts.index') }}" class="btn btn-soft-warning w-100 text-start">
+                        <i class="ri-money-dollar-circle-line align-bottom me-1"></i> Lihat & Catat Hutang
                     </a>
                 </div>
             </div><!-- end card body -->
@@ -147,4 +158,38 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var options = {
+            series: [{
+                name: 'Stok',
+                data: @json($chartData['stock'])
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: true, // Horizontal bar chart for better name readability
+                    distributed: true
+                }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+                categories: @json($chartData['labels']),
+            },
+            colors: ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#6366f1'], // Custom palette
+            theme: {
+                palette: 'palette1'
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#stockChart"), options);
+        chart.render();
+    });
+</script>
 @endpush

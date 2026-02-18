@@ -8,7 +8,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
-
+        // 1. Chart Data: Stock vs Product Name (Top 15 Lowest Stock)
+        $products = \App\Models\Product::orderBy('stock', 'asc')
+            ->take(15)
+            ->get();
+            
+        $chartData = [
+            'labels' => $products->pluck('name'),
+            'stock' => $products->pluck('stock'),
+        ];
 
         // 2. Metric: Purchases Today
         $todayPurchases = \App\Models\Transaction::where('type', 'purchase')
@@ -56,6 +64,6 @@ class DashboardController extends Controller
             ]
         ];
 
-        return view('dashboard', compact('todayPurchases', 'todayPaid', 'statusMetrics'));
+        return view('dashboard', compact('todayPurchases', 'todayPaid', 'statusMetrics', 'chartData'));
     }
 }
