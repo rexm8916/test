@@ -39,6 +39,10 @@
 
 
                 <div class="ms-1 header-item d-none d-sm-flex">
+                    <span id="current-time" class="fw-medium text-muted"></span>
+                </div>
+
+                <div class="ms-1 header-item d-none d-sm-flex">
                     <button type="button" class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle" data-toggle="fullscreen">
                         <i class='bx bx-fullscreen fs-22'></i>
                     </button>
@@ -72,3 +76,19 @@
         </div>
     </div>
 </header>
+
+@push('scripts')
+<script>
+    function updateDateTime() {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+        // Use Indonesian locale
+        const timeString = now.toLocaleDateString('id-ID', options); 
+        document.getElementById('current-time').textContent = timeString;
+    }
+    
+    // Update immediately and then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+</script>
+@endpush
