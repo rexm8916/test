@@ -492,17 +492,17 @@
                         <input type="hidden" name="items[${idx}][product_id]" value="${item.id}">
                         <input type="hidden" name="items[${idx}][price]" value="${item.price}">
                     </td>
-                    <td style="width: 110px;">
-                        <div class="input-group input-group-sm bg-light rounded border-0">
-                            <button type="button" class="btn btn-sm btn-ghost-dark px-2" onclick="updateQty(${item.id}, -1)">-</button>
-                            <input type="number" class="form-control form-control-sm border-0 bg-transparent text-center px-0 shadow-none" 
+                    <td style="width: 140px;">
+                        <div class="input-group bg-light rounded border-0">
+                            <button type="button" class="btn btn-ghost-dark px-3" onclick="updateQty(${item.id}, -1)"><i class="ri-subtract-line align-bottom"></i></button>
+                            <input type="number" class="form-control border-0 bg-transparent text-center px-0 shadow-none fs-16 fw-bold" 
                                 value="${item.qty}" name="items[${idx}][quantity]" onchange="manualQty(${item.id}, this.value)">
-                            <button type="button" class="btn btn-sm btn-ghost-primary px-2" onclick="updateQty(${item.id}, 1)">+</button>
+                            <button type="button" class="btn btn-ghost-primary px-3" onclick="updateQty(${item.id}, 1)"><i class="ri-add-line align-bottom"></i></button>
                         </div>
                     </td>
                     <td class="text-end pe-3">
-                        <div class="fw-bold text-dark fs-13">${formatMoney(item.price * item.qty)}</div>
-                        <i class="ri-close-circle-line text-danger cursor-pointer fs-5" onclick="removeItem(${item.id})"></i>
+                        <div class="fw-bold text-dark fs-14">${formatMoney(item.price * item.qty)}</div>
+                        <i class="ri-close-circle-line text-danger cursor-pointer fs-4" onclick="removeItem(${item.id})"></i>
                     </td>
                 </tr>
             `;
