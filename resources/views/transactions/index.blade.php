@@ -92,6 +92,7 @@
                                 <th>Tipe</th>
                                 <th>Pelanggan/Pemasok</th>
                                 <th>Total</th>
+                                <th>Dibayar</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -112,7 +113,7 @@
                                     <span class="fw-semibold">Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</span>
                                 </td>
                                 <td>
-                                    <span class="fw-semibold">Rp {{ number_format($transaction->debt ? $transaction->debt->amount_paid : $transaction->total_amount, 0, ',', '.') }}</span>
+                                    <span class="fw-semibold">Rp {{ number_format(($transaction->debt && $transaction->debt->status !== 'paid') ? $transaction->debt->amount_paid : $transaction->total_amount, 0, ',', '.') }}</span>
                                 </td>
                                 <td>
                                     @if($transaction->debt)
