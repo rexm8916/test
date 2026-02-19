@@ -112,7 +112,6 @@
                                     <span class="fw-semibold">Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</span>
                                 </td>
                                 <td>
-                                <td>
                                     @if($transaction->debt)
                                         @if($transaction->debt->status === 'paid')
                                             <span class="badge bg-success-subtle text-success text-uppercase">Lunas</span>
