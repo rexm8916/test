@@ -255,8 +255,8 @@
                         <div class="fw-semibold" id="subTotalDisplay">Rp 0</div>
                     </div>
                     <div class="col-6 text-end">
-                        <span class="text-muted small">Diskon</span>
-                        <input type="number" class="form-control form-control-sm text-end p-0 border-0 bg-transparent text-muted" 
+                        <span class="text-muted small d-block mb-1">Diskon</span>
+                        <input type="number" class="form-control form-control-sm text-end border border-secondary-subtle text-dark fw-bold pe-2" 
                             id="discountInput" name="discount" placeholder="0" oninput="calculateCart()">
                     </div>
                 </div>
