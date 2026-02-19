@@ -107,7 +107,11 @@
             <div class="item-row">
                 <div class="item-name">
                     {{ $item->product->name }}<br>
-                    <small>{{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}</small>
+                    @if($item->discount > 0)
+                        <small>{{ $item->quantity }} x <span style="text-decoration: line-through;">{{ number_format($item->price, 0, ',', '.') }}</span> {{ number_format($item->price - $item->discount, 0, ',', '.') }}</small>
+                    @else
+                        <small>{{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}</small>
+                    @endif
                 </div>
                 <div class="item-price">
                     {{ number_format($item->subtotal, 0, ',', '.') }}

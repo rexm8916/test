@@ -81,9 +81,21 @@
                         <tbody>
                             @foreach($transaction->items as $item)
                             <tr>
-                                <td class="fw-medium">{{ $item->product->name }}</td>
+                                <td class="fw-medium">
+                                    {{ $item->product->name }}
+                                    @if($item->discount > 0)
+                                        <br><small class="text-danger">Disc: Rp {{ number_format($item->discount, 0, ',', '.') }}</small>
+                                    @endif
+                                </td>
                                 <td class="text-end">{{ $item->quantity }}</td>
-                                <td class="text-end">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                                <td class="text-end">
+                                    @if($item->discount > 0)
+                                        <span class="text-decoration-line-through text-muted small">Rp {{ number_format($item->price, 0, ',', '.') }}</span><br>
+                                        Rp {{ number_format($item->price - $item->discount, 0, ',', '.') }}
+                                    @else
+                                        Rp {{ number_format($item->price, 0, ',', '.') }}
+                                    @endif
+                                </td>
                                 <td class="text-end">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
@@ -209,7 +221,11 @@
         <div style="display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 11px;">
             <div style="flex: 1; padding-right: 5px;">
                 {{ $item->product->name }}<br>
-                <small>{{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}</small>
+                @if($item->discount > 0)
+                    <small>{{ $item->quantity }} x <span style="text-decoration: line-through;">{{ number_format($item->price, 0, ',', '.') }}</span> {{ number_format($item->price - $item->discount, 0, ',', '.') }}</small>
+                @else
+                    <small>{{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}</small>
+                @endif
             </div>
             <div style="text-align: right; white-space: nowrap;">
                 {{ number_format($item->subtotal, 0, ',', '.') }}
