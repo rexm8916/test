@@ -519,7 +519,23 @@
         let count = 0;
         cart.forEach(i => { sub += i.price * i.qty; count += i.qty; });
 
-        const disc = parseFloat(els.discount.value) || 0;
+        let disc = parseFloat(els.discount.value) || 0;
+
+        // Validation: Limit discount to subtotal
+        if (disc > sub) {
+            disc = sub;
+            els.discount.value = sub;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Diskon Maksimal',
+                text: 'Diskon tidak boleh melebihi subtotal',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+
         const total = Math.max(0, sub - disc);
 
         els.subTotal.textContent = formatMoney(sub);
