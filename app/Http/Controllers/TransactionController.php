@@ -8,7 +8,7 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = \App\Models\Transaction::with('customer');
+        $query = \App\Models\Transaction::with(['customer', 'debt']);
 
         if ($request->start_date) {
             $query->whereDate('transaction_date', '>=', $request->start_date);
