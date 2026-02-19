@@ -473,8 +473,21 @@
         if(!item) return;
         let d = parseFloat(val);
         if(isNaN(d) || d < 0) d = 0;
-        // Optional: Clamp discount to price? 
-        // if(d > item.price) d = item.price; 
+        
+        // Validation: Limit discount to item price
+        if(d > item.price) {
+            d = item.price;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Diskon Maksimal',
+                text: 'Diskon per item tidak boleh melebihi harga satuan',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        }
+        
         item.discount = d;
         renderCart();
     };
