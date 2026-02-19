@@ -91,53 +91,54 @@ class TransactionController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.discount' => 'nullable|numeric|min:0',
             // Discount validation
             'discount' => 'nullable|numeric|min:0',
             // Debt validation
             'payment_status' => 'required|in:paid,partial,unpaid',
             'amount_paid' => 'nullable|numeric|min:0',
             // Customer is required
-            // Logic:
-            // Paid -> Can be Umum (we will set default in controller if empty, or enforce selection)
-            // Unpaid/Partial -> Must be selected AND cannot be 'Umum' (if we strictly follow 'harus isi dulu')?
-            // Let's just require customer_id for all, but for Paid we allow 'Umum'.
-            // For Unpaid/Partial, user asked "harus isi dulu customer nya". This implies they shouldn't use "Umum".
-            // Let's assume standard 'required'. The View will handle the "Umum" selection for Paid.
-            // For Unpaid/Partial, we might need to check if it's NOT Umum if that's the requirement,
-            // but for now, 'required' and 'exists' is the baseline.
             'customer_id' => 'required|exists:customers,id',
         ]);
 
         $transaction = \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
-            // 1. Calculate Subtotal (Before Discount)
+            // 1. Calculate Subtotal (Sum of Item Subtotals)
             $subtotalAmount = 0;
             foreach ($request->items as $item) {
-                $subtotalAmount += $item['quantity'] * $item['price'];
+                $itemPrice = $item['price'];
+                $itemDiscount = $item['discount'] ?? 0;
+                $itemQty = $item['quantity'];
+                $subtotalAmount += ($itemPrice - $itemDiscount) * $itemQty;
             }
 
-            // 2. Apply Discount (Only for sales, but logic supports both if needed)
-            $discount = $request->discount ?? 0;
-            $totalAmount = max(0, $subtotalAmount - $discount);
+            // 2. Apply Overall Discount (Optional, but let's keep it as additional discount or remove if per-item is enough)
+            // For now, let's keep the global discount as an additional discount on top of item discounts if user wants
+            $globalDiscount = $request->discount ?? 0;
+            $totalAmount = max(0, $subtotalAmount - $globalDiscount);
 
             // 3. Create Transaction
             $transaction = \App\Models\Transaction::create([
                 'type' => $request->type,
                 'customer_id' => $request->customer_id,
-                'total_amount' => $totalAmount, // This is now Final Total
-                'discount' => $discount,
+                'total_amount' => $totalAmount,
+                'discount' => $globalDiscount,
                 'transaction_date' => $request->transaction_date . ' ' . now()->format('H:i:s'),
                 'status' => 'completed',
             ]);
 
             // 4. Create Items & Update Stock
             foreach ($request->items as $itemData) {
-                $itemSubtotal = $itemData['quantity'] * $itemData['price'];
+                $itemPrice = $itemData['price'];
+                $itemDiscount = $itemData['discount'] ?? 0;
+                $itemQty = $itemData['quantity'];
+                $itemSubtotal = ($itemPrice - $itemDiscount) * $itemQty;
 
                 \App\Models\TransactionItem::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $itemData['product_id'],
-                    'quantity' => $itemData['quantity'],
-                    'price' => $itemData['price'],
+                    'quantity' => $itemQty,
+                    'price' => $itemPrice,
+                    'discount' => $itemDiscount,
                     'subtotal' => $itemSubtotal,
                 ]);
 

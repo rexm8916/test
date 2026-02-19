@@ -444,7 +444,7 @@
         if (exists) {
             exists.qty++;
         } else {
-            cart.push({ id: product.id, name: product.name, price: price, qty: 1 });
+            cart.push({ id: product.id, name: product.name, price: price, qty: 1, discount: 0 });
         }
         renderCart();
     };
@@ -468,6 +468,17 @@
         renderCart();
     };
 
+    window.updateItemDiscount = (id, val) => {
+        const item = cart.find(i => i.id === id);
+        if(!item) return;
+        let d = parseFloat(val);
+        if(isNaN(d) || d < 0) d = 0;
+        // Optional: Clamp discount to price? 
+        // if(d > item.price) d = item.price; 
+        item.discount = d;
+        renderCart();
+    };
+
     window.removeItem = (id) => {
         cart = cart.filter(i => i.id !== id);
         renderCart();
@@ -485,11 +496,19 @@
         els.emptyMsg.classList.add('d-none');
 
         cart.forEach((item, idx) => {
+            const itemSubtotal = (item.price - (item.discount || 0)) * item.qty;
             const html = `
                 <tr class="border-bottom border-light">
                     <td class="ps-3 py-2">
                         <div class="fw-medium text-dark text-truncate" style="max-width: 140px; font-size:13px;">${item.name}</div>
                         <div class="text-muted small">${formatMoney(item.price)}</div>
+                        <div class="input-group input-group-sm mt-1" style="width: 120px;">
+                            <span class="input-group-text bg-light border-0 px-1 text-muted" style="font-size: 10px;">Disc</span>
+                            <input type="number" class="form-control form-control-sm border-light bg-light text-end px-1 shadow-none" 
+                                style="font-size: 11px;"
+                                value="${item.discount || ''}" placeholder="0" 
+                                name="items[${idx}][discount]" onchange="updateItemDiscount(${item.id}, this.value)">
+                        </div>
                         <input type="hidden" name="items[${idx}][product_id]" value="${item.id}">
                         <input type="hidden" name="items[${idx}][price]" value="${item.price}">
                     </td>
@@ -502,8 +521,9 @@
                         </div>
                     </td>
                     <td class="text-end pe-3">
-                        <div class="fw-bold text-dark fs-14">${formatMoney(item.price * item.qty)}</div>
-                        <i class="ri-close-circle-line text-danger cursor-pointer fs-4" onclick="removeItem(${item.id})"></i>
+                        <div class="fw-bold text-dark fs-14">${formatMoney(itemSubtotal)}</div>
+                        ${item.discount > 0 ? `<div class="small text-danger text-decoration-line-through">${formatMoney(item.price * item.qty)}</div>` : ''}
+                        <i class="ri-close-circle-line text-danger cursor-pointer fs-4 mt-1" onclick="removeItem(${item.id})"></i>
                     </td>
                 </tr>
             `;
@@ -517,7 +537,11 @@
     function calculateTotals() {
         let sub = 0;
         let count = 0;
-        cart.forEach(i => { sub += i.price * i.qty; count += i.qty; });
+        cart.forEach(i => { 
+            const itemDisc = i.discount || 0;
+            sub += (i.price - itemDisc) * i.qty; 
+            count += i.qty; 
+        });
 
         let disc = parseFloat(els.discount.value) || 0;
 
