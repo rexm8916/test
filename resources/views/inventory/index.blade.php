@@ -118,7 +118,7 @@
                         <tbody>
                             @forelse($ledgers as $ledger)
                             <tr>
-                                <td>{{ $ledger->date->format('d M Y') }}</td>
+                                <td>{{ $ledger->date->translatedFormat('d F Y') }}</td>
                                 <td>
                                     @if($ledger->type == 'initial')
                                         <span class="badge bg-info">Awal</span>
