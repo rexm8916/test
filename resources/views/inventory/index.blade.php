@@ -16,6 +16,48 @@
     </div>
 </div>
 
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Total Saldo</p>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ $totalSaldo }}">Rp {{ number_format($totalSaldo, 0, ',', '.') }}</span></h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                <i class="ri-wallet-3-line text-info"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Total Penjualan</p>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ $totalPenjualan }}">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</span></h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                                <i class="ri-shopping-cart-2-line text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div>
+
 <div class="row">
     <div class="col-lg-12">
         <div class="card">

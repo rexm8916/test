@@ -26,10 +26,17 @@ class InventoryLedgerController extends Controller
             return $item;
         });
 
+        // Calculate Total Sales
+        $totalPenjualan = $ledgers->where('type', 'sale')->sum('amount');
+
         // Reverse collection to display in descending order, newest first
         $ledgers = $ledgers->reverse()->values();
 
-        return view('inventory.index', compact('ledgers'));
+        // The final balance will be the balance of the first item in the reversed collection (newest entry)
+        // If there are no entries, balance is 0.
+        $totalSaldo = $ledgers->first() ? $ledgers->first()->balance : 0;
+
+        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalPenjualan'));
     }
 
     /**
