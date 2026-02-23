@@ -25,6 +25,10 @@
             background: linear-gradient(135deg, rgba(16, 42, 28, 1) 0%, rgba(22, 60, 40, 1) 100%) !important;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
+        /* Make logo background transparent so it blends with the green sidebar */
+        [data-sidebar="dark"] .navbar-brand-box {
+            background: transparent !important;
+        }
         [data-sidebar="dark"] .menu-title {
             color: rgba(255, 255, 255, 0.5) !important;
         }
