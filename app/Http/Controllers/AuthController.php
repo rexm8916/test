@@ -21,7 +21,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            
+            if (auth()->user()->isSuperAdmin()) {
+                return redirect()->intended('inventory');
+            }
+
             if (auth()->user()->role === 'admin') {
                 return redirect()->intended('/');
             }
