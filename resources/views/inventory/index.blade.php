@@ -17,8 +17,8 @@
 </div>
 
 <div class="row mb-3">
-    <div class="col-md-6">
-        <div class="card card-animate">
+    <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+        <div class="card card-animate h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -37,8 +37,48 @@
         </div><!-- end card -->
     </div><!-- end col -->
 
-    <div class="col-md-6">
-        <div class="card card-animate">
+    <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+        <div class="card card-animate h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Pembelian (Masuk)</p>
+                        <h2 class="mt-4 ff-secondary fw-semibold text-success">Rp {{ number_format($totalMasuk, 0, ',', '.') }}</h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                                <i class="ri-arrow-right-down-line text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6 mb-3 mb-md-0">
+        <div class="card card-animate h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Penjualan (Keluar)</p>
+                        <h2 class="mt-4 ff-secondary fw-semibold text-danger">Rp {{ number_format($totalKeluar, 0, ',', '.') }}</h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-danger-subtle rounded-circle fs-2">
+                                <i class="ri-arrow-right-up-line text-danger"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>

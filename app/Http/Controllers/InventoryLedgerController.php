@@ -31,6 +31,9 @@ class InventoryLedgerController extends Controller
         $totalStockOut = $ledgers->where('type', 'sale')->sum('quantity');
         $totalStock = $totalStockIn - $totalStockOut;
 
+        $totalMasuk = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
+        $totalKeluar = $ledgers->where('type', 'sale')->sum('amount');
+
         // Reverse collection to display in descending order, newest first
         $ledgers = $ledgers->reverse()->values();
 
@@ -38,7 +41,7 @@ class InventoryLedgerController extends Controller
         // If there are no entries, balance is 0.
         $totalSaldo = $ledgers->first() ? $ledgers->first()->balance : 0;
 
-        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalStock'));
+        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalStock', 'totalMasuk', 'totalKeluar'));
     }
 
     /**
