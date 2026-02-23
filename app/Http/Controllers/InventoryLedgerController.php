@@ -9,8 +9,11 @@ class InventoryLedgerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $startDate = $request->input('start_date', \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d'));
+
         $ledgers = \App\Models\InventoryLedger::orderBy('date')->orderBy('id')->get();
 
         // Calculate Running Balance
@@ -26,17 +29,24 @@ class InventoryLedgerController extends Controller
             return $item;
         });
 
-        // Calculate Total Stock (summen quantity)
-        $totalStockIn = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('quantity');
-        $totalStockOut = $ledgers->where('type', 'sale')->sum('quantity');
-        $totalStock = $totalStockIn - $totalStockOut;
+        // Filter ledgers down to the selected date range
+        $filteredLedgers = $ledgers->filter(function ($item) use ($startDate, $endDate) {
+            $itemDate = \Carbon\Carbon::parse($item->date)->format('Y-m-d');
+            return $itemDate >= $startDate && $itemDate <= $endDate;
+        })->values();
 
-        $totalMasuk = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
-        $totalKeluar = $ledgers->where('type', 'sale')->sum('amount');
+        // Calculate period totals
+        $totalMasuk = $filteredLedgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
+        $totalKeluar = $filteredLedgers->where('type', 'sale')->sum('amount');
 
-        // Calculate Stock Per Item
+        // Calculate Total Stock (summen quantity) over filtered period
+        $totalStockIn = $filteredLedgers->whereIn('type', ['initial', 'purchase'])->sum('quantity');
+        $totalStockOut = $filteredLedgers->where('type', 'sale')->sum('quantity');
+        $totalStock = max(0, $totalStockIn - $totalStockOut);
+
+        // Calculate Stock Per Item over filtered period
         $stockPerItem = [];
-        $items = $ledgers->whereNotNull('item_name')->groupBy('item_name');
+        $items = $filteredLedgers->whereNotNull('item_name')->groupBy('item_name');
         foreach ($items as $name => $transactions) {
             $in = $transactions->whereIn('type', ['initial', 'purchase'])->sum('quantity');
             $out = $transactions->where('type', 'sale')->sum('quantity');
@@ -44,13 +54,29 @@ class InventoryLedgerController extends Controller
         }
 
         // Reverse collection to display in descending order, newest first
-        $ledgers = $ledgers->reverse()->values();
+        $filteredLedgers = $filteredLedgers->reverse()->values();
 
-        // The final balance will be the balance of the first item in the reversed collection (newest entry)
-        // If there are no entries, balance is 0.
-        $totalSaldo = $ledgers->first() ? $ledgers->first()->balance : 0;
+        // Determine total saldo (ending balance of the period)
+        if ($filteredLedgers->isNotEmpty()) {
+            $totalSaldo = $filteredLedgers->first()->balance;
+        } else {
+            // Find last transaction before startDate
+            $lastBefore = $ledgers->filter(function($i) use ($startDate) {
+                return \Carbon\Carbon::parse($i->date)->format('Y-m-d') < $startDate;
+            })->last();
+            $totalSaldo = $lastBefore ? $lastBefore->balance : 0;
+        }
 
-        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalStock', 'totalMasuk', 'totalKeluar', 'stockPerItem'));
+        return view('inventory.index', [
+            'ledgers' => $filteredLedgers,
+            'totalSaldo' => $totalSaldo,
+            'totalStock' => $totalStock,
+            'totalMasuk' => $totalMasuk,
+            'totalKeluar' => $totalKeluar,
+            'stockPerItem' => $stockPerItem,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
     }
 
     /**

@@ -17,6 +17,35 @@
 </div>
 
 <div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form action="{{ route('inventory.index') }}" method="GET" class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="start_date" class="col-form-label">Mulai Tanggal:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ $startDate }}">
+                    </div>
+                    <div class="col-auto">
+                        <label for="end_date" class="col-form-label">Sampai Tanggal:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ $endDate }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary"><i class="ri-filter-2-line align-bottom me-1"></i> Filter</button>
+                    </div>
+                    <div class="col-auto">
+                        <a href="{{ route('inventory.index') }}" class="btn btn-light"><i class="ri-refresh-line align-bottom me-1"></i> Reset</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
     <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
         <div class="card card-animate h-100">
             <div class="card-body">
