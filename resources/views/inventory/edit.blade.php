@@ -80,13 +80,19 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="quantity_display" class="form-label">Jumlah</label>
-                                    <input type="text" class="form-control" id="quantity_display" value="{{ old('quantity', $ledger->quantity ? number_format($ledger->quantity, 0, ',', '.') : '') }}" placeholder="0" onkeyup="updateInput(this, 'quantity')">
+                                    <input type="text" class="form-control @error('quantity') is-invalid @enderror" id="quantity_display" value="{{ old('quantity', $ledger->quantity ? number_format($ledger->quantity, 0, ',', '.') : '') }}" placeholder="0" onkeyup="updateInput(this, 'quantity')">
                                     <input type="hidden" id="quantity" name="quantity" value="{{ old('quantity', $ledger->quantity) }}">
+                                    @error('quantity')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="unit_price_display" class="form-label">Harga Satuan</label>
-                                    <input type="text" class="form-control" id="unit_price_display" value="{{ old('unit_price', $ledger->unit_price ? number_format($ledger->unit_price, 0, ',', '.') : '') }}" placeholder="Rp 0" onkeyup="updateInput(this, 'unit_price')">
+                                    <input type="text" class="form-control @error('unit_price') is-invalid @enderror" id="unit_price_display" value="{{ old('unit_price', $ledger->unit_price ? number_format($ledger->unit_price, 0, ',', '.') : '') }}" placeholder="Rp 0" onkeyup="updateInput(this, 'unit_price')">
                                     <input type="hidden" id="unit_price" name="unit_price" value="{{ old('unit_price', $ledger->unit_price) }}">
+                                    @error('unit_price')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="col-12 mb-3">
@@ -116,6 +122,13 @@
 </div>
 
 <script>
+    let maxQuantity = null;
+    let minPrice = null;
+
+    // Original data for edit validation
+    const originalItemName = "{{ $ledger->item_name }}";
+    const originalQuantity = {{ $ledger->quantity ?? 0 }};
+
     function toggleFields() {
         const typeInput = document.querySelector('input[name="type"]:checked');
         const type = typeInput ? typeInput.value : 'initial';
@@ -144,6 +157,68 @@
         if (type === 'purchase' || type === 'sale_item') {
             calculateTotal();
         }
+
+        // Fetch validation info
+        maxQuantity = null;
+        minPrice = null;
+        if (type === 'sale_item' && $('#item_name').val()) {
+            fetchItemInfo($('#item_name').val());
+        }
+    }
+
+    function fetchItemInfo(itemName) {
+        if (!itemName) return;
+        $.ajax({
+            url: "{{ route('api.inventory.item_info') }}",
+            data: { item_name: itemName },
+            success: function(res) {
+                // For editing, if we are looking at the same item, 
+                // the current stock in DB already *subtracted* our originalQuantity.
+                // So the actual max we can change it to is stock + originalQuantity.
+                maxQuantity = res.stock;
+                if (itemName === originalItemName) {
+                    maxQuantity += originalQuantity;
+                }
+                minPrice = res.base_price;
+                validateInputs();
+            }
+        });
+    }
+
+    function validateInputs() {
+        const typeInput = document.querySelector('input[name="type"]:checked');
+        if (typeInput && typeInput.value === 'sale_item') {
+            const qtyInput = document.getElementById('quantity');
+            const priceInput = document.getElementById('unit_price');
+            const qtyDisplay = document.getElementById('quantity_display');
+            const priceDisplay = document.getElementById('unit_price_display');
+            
+            let qty = parseFloat(qtyInput.value) || 0;
+            let price = parseFloat(priceInput.value) || 0;
+
+            // Clear previous errors
+            qtyDisplay.classList.remove('is-invalid');
+            priceDisplay.classList.remove('is-invalid');
+            $('#qty-error').remove();
+            $('#price-error').remove();
+
+            let hasError = false;
+
+            if (maxQuantity !== null && qty > maxQuantity) {
+                qtyDisplay.classList.add('is-invalid');
+                $(qtyDisplay).after('<div id="qty-error" class="invalid-feedback d-block">Stok tidak mencukupi. Maks: ' + maxQuantity + '</div>');
+                hasError = true;
+            }
+
+            if (minPrice !== null && price > 0 && price < minPrice) {
+                priceDisplay.classList.add('is-invalid');
+                $(priceDisplay).after('<div id="price-error" class="invalid-feedback d-block">Harga tidak boleh kurang dari harga beli: Rp ' + new Intl.NumberFormat('id-ID').format(minPrice) + '</div>');
+                hasError = true;
+            }
+
+            return !hasError;
+        }
+        return true;
     }
 
     function updateInput(element, hiddenId) {
@@ -170,6 +245,9 @@
             element.value = '';
         }
 
+        // Validate
+        validateInputs();
+
         // 4. Trigger Total Calc if needed
         if (hiddenId === 'quantity' || hiddenId === 'unit_price') {
             calculateTotal();
@@ -193,8 +271,20 @@
                 tags: true, /* Allows adding new items not in the list */
                 placeholder: "Pilih atau ketik nama barang...",
                 allowClear: true
+            }).on('change', function() {
+                const typeInput = document.querySelector('input[name="type"]:checked');
+                if (typeInput && typeInput.value === 'sale_item') {
+                    fetchItemInfo(this.value);
+                }
             });
         }
+
+        $('form').on('submit', function(e) {
+            if (!validateInputs()) {
+                e.preventDefault();
+                alert('Terdapat peringatan pada input. Silakan periksa kembali Jumlah atau Harga Satuan.');
+            }
+        });
     });
 </script>
 @endsection

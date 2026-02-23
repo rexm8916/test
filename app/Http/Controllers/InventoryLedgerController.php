@@ -77,6 +77,35 @@ class InventoryLedgerController extends Controller
             $amount = $request->quantity * $request->unit_price;
         }
 
+        // Add backend validation for sale_item
+        if ($type == 'sale_item' && $itemName) {
+            $totalIn = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->whereIn('type', ['initial', 'purchase'])
+                ->sum('quantity');
+                
+            $totalOut = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->where('type', 'sale')
+                ->sum('quantity');
+                
+            $maxStock = max(0, $totalIn - $totalOut);
+            
+            $minPrice = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->where('type', 'purchase')
+                ->max('unit_price') ?? 0;
+
+            if ($request->quantity > $maxStock) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'quantity' => 'Stok tidak mencukupi. Maks: ' . $maxStock
+                ]);
+            }
+
+            if ($request->unit_price > 0 && $request->unit_price < $minPrice) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'unit_price' => 'Harga tidak boleh kurang dari harga beli: Rp ' . number_format($minPrice, 0, ',', '.')
+                ]);
+            }
+        }
+
         // Normalize sale sub-types to 'sale' for database
         if (in_array($type, ['sale_item'])) {
             $type = 'sale';
@@ -126,6 +155,38 @@ class InventoryLedgerController extends Controller
 
         if ($type == 'purchase' || $type == 'sale_item') {
             $amount = $request->quantity * $request->unit_price;
+        }
+
+        // Add backend validation for sale_item on update
+        if ($type == 'sale_item' && $itemName) {
+            $totalIn = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->whereIn('type', ['initial', 'purchase'])
+                ->sum('quantity');
+                
+            $totalOut = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->where('type', 'sale')
+                ->where('id', '!=', $id) // Exclude current transaction
+                ->sum('quantity');
+                
+            // If the original type was a sale for the SAME item, we also need to account for logic
+            // actually excluding the current transaction from totalOut works beautifully here.
+            $maxStock = max(0, $totalIn - $totalOut);
+            
+            $minPrice = \App\Models\InventoryLedger::where('item_name', $itemName)
+                ->where('type', 'purchase')
+                ->max('unit_price') ?? 0;
+
+            if ($request->quantity > $maxStock) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'quantity' => 'Stok tidak mencukupi. Maks: ' . $maxStock
+                ]);
+            }
+
+            if ($request->unit_price > 0 && $request->unit_price < $minPrice) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'unit_price' => 'Harga tidak boleh kurang dari harga beli: Rp ' . number_format($minPrice, 0, ',', '.')
+                ]);
+            }
         }
 
         // Normalize sale sub-types to 'sale' for database

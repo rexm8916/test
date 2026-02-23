@@ -19,3 +19,5 @@ Route::get('/transactions/{id}/print', [App\Http\Controllers\TransactionControll
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class , 'index'])->name('dashboard');
 Route::resource('expenses', App\Http\Controllers\ExpenseController::class);
+
+Route::get('/api/inventory/item-info', [\App\Http\Controllers\Api\InventoryApiController::class, 'getItemInfo'])->name('api.inventory.item_info');
