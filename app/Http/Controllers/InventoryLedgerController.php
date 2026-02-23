@@ -26,6 +26,9 @@ class InventoryLedgerController extends Controller
             return $item;
         });
 
+        // Reverse collection to display in descending order, newest first
+        $ledgers = $ledgers->reverse()->values();
+
         return view('inventory.index', compact('ledgers'));
     }
 
