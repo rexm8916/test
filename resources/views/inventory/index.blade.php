@@ -85,7 +85,11 @@
                                     @elseif($ledger->type == 'purchase')
                                         <span class="badge bg-success">Pembelian</span>
                                     @else
-                                        <span class="badge bg-danger">Penjualan</span>
+                                        @if($ledger->item_name)
+                                            <span class="badge bg-danger">Keluar Barang</span>
+                                        @else
+                                            <span class="badge bg-danger">Harian</span>
+                                        @endif
                                     @endif
                                 </td>
                                 <td>
@@ -101,7 +105,7 @@
                                             <div class="text-muted fs-12">{{ $ledger->quantity }} x Rp {{ number_format($ledger->unit_price, 0, ',', '.') }}</div>
                                         @else
                                             <!-- Regular Sale (Rp Saja) -->
-                                            Penjualan (Rp Saja)
+                                            Penjualan (Keluar) - Harian
                                         @endif
                                     @endif
                                 </td>

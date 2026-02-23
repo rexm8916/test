@@ -46,10 +46,10 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="type" id="typeSale" value="sale" {{ $currentType == 'sale' ? 'checked' : '' }} onchange="toggleFields()">
                                     <label class="form-check-label" for="typeSale">
-                                        Penjualan (Keluar) - Rp Saja
+                                        Penjualan (Keluar) - Harian
                                     </label>
                                 </div>
-                                <div class="form-check ms-4">
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="type" id="typeSaleItem" value="sale_item" {{ $currentType == 'sale_item' ? 'checked' : '' }} onchange="toggleFields()">
                                     <label class="form-check-label" for="typeSaleItem">
                                         Keluar Barang (Input Jumlah & Harga Satuan)
@@ -147,7 +147,7 @@
         } else {
             amountField.style.display = 'block';
             if (type === 'sale') {
-                amountLabel.innerText = 'Jumlah Penjualan (Keluar) - Rp';
+                amountLabel.innerText = 'Jumlah Penjualan (Keluar) - Harian';
             } else {
                 amountLabel.innerText = 'Jumlah Saldo Awal - Rp';
             }
