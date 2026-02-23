@@ -78,7 +78,7 @@
     </div><!-- end col -->
 
     <div class="col-xl-3 col-md-6">
-        <div class="card card-animate h-100">
+        <div class="card card-animate h-100" data-bs-toggle="modal" data-bs-target="#stockModal" style="cursor: pointer;" title="Klik untuk melihat detail stok per barang">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
@@ -179,12 +179,59 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">Tidak ada catatan inventaris yang ditemukan.</td>
+                                <td colspan="7" class="text-center">Tidak ada catatan inventaris yang ditemukan.</td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Details Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-light p-3">
+                <h5 class="modal-title" id="stockModalLabel">Detail Stok Barang</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="close-modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama Barang</th>
+                                <th class="text-end">Jumlah Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($stockPerItem as $name => $qty)
+                            <tr>
+                                <td class="fw-medium">{{ $name }}</td>
+                                <td class="text-end {{ $qty > 0 ? 'text-success fw-bold' : ($qty < 0 ? 'text-danger fw-bold' : '') }}">
+                                    {{ number_format($qty, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="2" class="text-center">Belum ada data barang.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td>Total Keseluruhan</td>
+                                <td class="text-end">{{ number_format($totalStock, 0, ',', '.') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>

@@ -34,6 +34,15 @@ class InventoryLedgerController extends Controller
         $totalMasuk = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
         $totalKeluar = $ledgers->where('type', 'sale')->sum('amount');
 
+        // Calculate Stock Per Item
+        $stockPerItem = [];
+        $items = $ledgers->whereNotNull('item_name')->groupBy('item_name');
+        foreach ($items as $name => $transactions) {
+            $in = $transactions->whereIn('type', ['initial', 'purchase'])->sum('quantity');
+            $out = $transactions->where('type', 'sale')->sum('quantity');
+            $stockPerItem[$name] = $in - $out;
+        }
+
         // Reverse collection to display in descending order, newest first
         $ledgers = $ledgers->reverse()->values();
 
@@ -41,7 +50,7 @@ class InventoryLedgerController extends Controller
         // If there are no entries, balance is 0.
         $totalSaldo = $ledgers->first() ? $ledgers->first()->balance : 0;
 
-        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalStock', 'totalMasuk', 'totalKeluar'));
+        return view('inventory.index', compact('ledgers', 'totalSaldo', 'totalStock', 'totalMasuk', 'totalKeluar', 'stockPerItem'));
     }
 
     /**
