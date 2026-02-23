@@ -43,7 +43,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="fw-medium text-muted mb-0">Total Stock</p>
-                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ $totalStock }}">Rp {{ number_format($totalStock, 0, ',', '.') }}</span></h2>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ $totalStock }}">{{ number_format($totalStock, 0, ',', '.') }}</span></h2>
                     </div>
                     <div>
                         <div class="avatar-sm flex-shrink-0">

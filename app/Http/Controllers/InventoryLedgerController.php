@@ -26,8 +26,10 @@ class InventoryLedgerController extends Controller
             return $item;
         });
 
-        // Calculate Total Stock
-        $totalStock = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
+        // Calculate Total Stock (summen quantity)
+        $totalStockIn = $ledgers->whereIn('type', ['initial', 'purchase'])->sum('quantity');
+        $totalStockOut = $ledgers->where('type', 'sale')->sum('quantity');
+        $totalStock = $totalStockIn - $totalStockOut;
 
         // Reverse collection to display in descending order, newest first
         $ledgers = $ledgers->reverse()->values();
