@@ -45,6 +45,13 @@
                 </li>
 
                 @if(auth()->check() && auth()->user()->isSuperAdmin())
+                <li class="menu-title"><span data-key="t-menu">Data Master</span></li>
+                
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{{ route('branches.index') }}">
+                        <i class="ri-store-2-line"></i> <span data-key="t-branches">Cabang Toko</span>
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{{ route('users.index') }}">
                         <i class="ri-group-line"></i> <span data-key="t-users">Manajemen Pengguna</span>

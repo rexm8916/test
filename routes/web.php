@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(\App\Http\Middleware\IsSuperAdmin::class)->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class);
+        Route::resource('branches', \App\Http\Controllers\BranchController::class);
     });
 });
 
