@@ -99,10 +99,6 @@
                                             <!-- Sale Item (Keluar Barang) -->
                                             <div class="fw-medium">{{ $ledger->item_name }}</div>
                                             <div class="text-muted fs-12">{{ $ledger->quantity }} x Rp {{ number_format($ledger->unit_price, 0, ',', '.') }}</div>
-                                        @elseif($ledger->item_name && $ledger->amount && !$ledger->unit_price)
-                                            <!-- Sale Direct (Input Penjualan Langsung dengan Barang) -->
-                                            <div class="fw-medium">{{ $ledger->item_name }}</div>
-                                            <div class="text-muted fs-12">{{ $ledger->quantity }} (Terjual)</div>
                                         @else
                                             <!-- Regular Sale (Rp Saja) -->
                                             Penjualan (Rp Saja)

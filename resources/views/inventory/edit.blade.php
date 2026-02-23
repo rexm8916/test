@@ -25,8 +25,6 @@
                                 if ($currentType == 'sale') {
                                     if ($ledger->item_name && $ledger->unit_price) {
                                         $currentType = 'sale_item';
-                                    } elseif ($ledger->item_name && $ledger->amount && !$ledger->unit_price) {
-                                        $currentType = 'sale_direct';
                                     }
                                 }
                             @endphp
@@ -52,12 +50,6 @@
                                     </label>
                                 </div>
                                 <div class="form-check ms-4">
-                                    <input class="form-check-input" type="radio" name="type" id="typeSaleDirect" value="sale_direct" {{ $currentType == 'sale_direct' ? 'checked' : '' }} onchange="toggleFields()">
-                                    <label class="form-check-label" for="typeSaleDirect">
-                                        Input Penjualan Langsung (Barang Existing)
-                                    </label>
-                                </div>
-                                <div class="form-check ms-4">
                                     <input class="form-check-input" type="radio" name="type" id="typeSaleItem" value="sale_item" {{ $currentType == 'sale_item' ? 'checked' : '' }} onchange="toggleFields()">
                                     <label class="form-check-label" for="typeSaleItem">
                                         Keluar Barang (Input Jumlah & Harga Satuan)
@@ -70,7 +62,12 @@
                         <div id="purchase_fields" style="display: none;">
                             <div class="col-12 mb-3">
                                 <label for="item_name" class="form-label">Nama Barang</label>
-                                <input type="text" class="form-control" id="item_name" name="item_name" value="{{ old('item_name', $ledger->item_name) }}">
+                                <input type="text" class="form-control" id="item_name" name="item_name" value="{{ old('item_name', $ledger->item_name) }}" list="existingItemsList" autocomplete="off" placeholder="Pilih atau ketik nama barang...">
+                                <datalist id="existingItemsList">
+                                    @foreach($existingItems as $itemName)
+                                        <option value="{{ $itemName }}">
+                                    @endforeach
+                                </datalist>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -87,24 +84,6 @@
                             <div class="col-12 mb-3">
                                 <label class="form-label">Total Amount</label>
                                 <div class="fs-4 fw-bold text-success" id="purchase_total_display">Rp 0</div>
-                            </div>
-                        </div>
-
-                        <!-- Sale Direct (Existing Item) -->
-                        <div id="sale_direct_fields" style="display: none;">
-                            <div class="col-12 mb-3">
-                                <label for="existing_item_name" class="form-label">Nama Barang (Existing)</label>
-                                <input type="text" class="form-control" id="existing_item_name" name="existing_item_name" value="{{ old('existing_item_name', $ledger->item_name) }}">
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="direct_quantity_display" class="form-label">Jumlah Terjual</label>
-                                    <input type="text" class="form-control" id="direct_quantity_display" value="{{ old('quantity', ($currentType == 'sale_direct' && $ledger->quantity) ? number_format($ledger->quantity, 0, ',', '.') : '') }}" placeholder="0" onkeyup="updateInput(this, 'quantity')">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="direct_amount_display" class="form-label">Total Harga (Rp)</label>
-                                    <input type="text" class="form-control" id="direct_amount_display" value="{{ old('amount', ($currentType == 'sale_direct' && $ledger->amount) ? number_format($ledger->amount, 0, ',', '.') : '') }}" placeholder="Rp 0" onkeyup="updateInput(this, 'amount')">
-                                </div>
                             </div>
                         </div>
 
@@ -133,21 +112,17 @@
         const typeInput = document.querySelector('input[name="type"]:checked');
         const type = typeInput ? typeInput.value : 'initial';
         const purchaseFields = document.getElementById('purchase_fields');
-        const saleDirectFields = document.getElementById('sale_direct_fields');
         const amountField = document.getElementById('amount_field');
         const amountLabel = document.getElementById('amount_label');
 
         // Hide all fields first
         purchaseFields.style.display = 'none';
-        saleDirectFields.style.display = 'none';
         amountField.style.display = 'none';
 
         if (type === 'purchase' || type === 'sale_item') {
             purchaseFields.style.display = 'block';
             let colorClass = type === 'purchase' ? 'text-success' : 'text-danger';
             document.getElementById('purchase_total_display').className = 'fs-4 fw-bold ' + colorClass;
-        } else if (type === 'sale_direct') {
-            saleDirectFields.style.display = 'block';
         } else {
             amountField.style.display = 'block';
             if (type === 'sale') {
@@ -198,11 +173,6 @@
         const price = parseFloat(document.getElementById('unit_price').value) || 0;
         const total = qty * price;
         document.getElementById('purchase_total_display').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
-    }
-
-        if(amountInput.value) amountInput.value = new Intl.NumberFormat('id-ID').format(amountInput.value);
-        
-        calculateTotal();
     }
 
     // Run on load
