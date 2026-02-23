@@ -63,14 +63,39 @@
                             </div>
                         </div>
 
-                        <!-- Purchase / Sale Item Fields -->
-                        <div id="purchase_fields" style="display: none;">
-                            <div class="col-12 mb-3" id="purchase_item_container" style="display: none;">
-                                <label for="item_name_purchase" class="form-label">Nama Barang</label>
-                                <input type="text" class="form-control" id="item_name_purchase" name="item_name" value="{{ old('item_name') }}" placeholder="Ketik nama barang...">
+                        <!-- Purchase Items Table -->
+                        <div id="purchase_fields" style="display: none;" class="col-12 mt-4">
+                            <h6 class="mb-3 border-bottom pb-2">Daftar Barang Masuk</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm" id="purchase_items_table">
+                                    <thead class="table-light text-center">
+                                        <tr>
+                                            <th style="width: 40%">Nama Barang</th>
+                                            <th style="width: 20%">Jumlah</th>
+                                            <th style="width: 25%">Harga Satuan (Rp)</th>
+                                            <th style="width: 10%">Subtotal</th>
+                                            <th style="width: 5%">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Rows will be added dynamically by JS -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end fw-bold">Total Pembelian:</td>
+                                            <td colspan="2" class="fw-bold text-success fs-15 text-end" id="purchase_grand_total">Rp 0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
+                            <button type="button" class="btn btn-sm btn-soft-primary mt-2" onclick="addPurchaseRow()">
+                                <i class="ri-add-line align-middle me-1"></i> Tambah Barang
+                            </button>
+                        </div>
 
-                            <div class="col-12 mb-3" id="sale_item_container" style="display: none;">
+                        <!-- Sale Item Fields (Single Input as before) -->
+                        <div id="sale_item_fields" style="display: none;" class="col-12 mt-3">
+                            <div class="mb-3" id="sale_item_container">
                                 <label for="item_name_sale" class="form-label">Nama Barang</label>
                                 <select class="form-select select2-item-name" id="item_name_sale" name="item_name" style="width: 100%;">
                                     <option value="">Pilih barang...</option>
@@ -99,7 +124,7 @@
                             </div>
                             <div class="col-12 mb-3">
                                 <label class="form-label">Total Amount</label>
-                                <div class="fs-4 fw-bold text-success" id="purchase_total_display">Rp 0</div>
+                                <div class="fs-4 fw-bold text-danger" id="sale_total_display">Rp 0</div>
                             </div>
                         </div>
 
@@ -124,6 +149,98 @@
 </div>
 
 <script>
+    let purchaseRowIndex = 0;
+
+    function addPurchaseRow() {
+        const tbody = document.querySelector('#purchase_items_table tbody');
+        const rowId = `purchase_row_${purchaseRowIndex}`;
+        
+        const tr = document.createElement('tr');
+        tr.id = rowId;
+        tr.innerHTML = `
+            <td>
+                <input type="text" class="form-control form-control-sm" name="items[${purchaseRowIndex}][item_name]" placeholder="Nama barang..." required>
+            </td>
+            <td>
+                <input type="text" class="form-control form-control-sm purchase-qty-display" placeholder="0" onkeyup="updatePurchaseRow('${rowId}', 'quantity', ${purchaseRowIndex})">
+                <input type="hidden" name="items[${purchaseRowIndex}][quantity]" id="purchase_qty_${purchaseRowIndex}" class="purchase-qty-val" required>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Rp</span>
+                    <input type="text" class="form-control purchase-price-display" placeholder="0" onkeyup="updatePurchaseRow('${rowId}', 'unit_price', ${purchaseRowIndex})">
+                </div>
+                <input type="hidden" name="items[${purchaseRowIndex}][unit_price]" id="purchase_price_${purchaseRowIndex}" class="purchase-price-val" required>
+            </td>
+            <td class="text-end align-middle fw-medium">
+                <span id="purchase_subtotal_${purchaseRowIndex}" class="purchase-subtotal">Rp 0</span>
+            </td>
+            <td class="text-center align-middle">
+                <button type="button" class="btn btn-sm btn-ghost-danger btn-icon" onclick="removePurchaseRow('${rowId}')">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+        purchaseRowIndex++;
+    }
+
+    function removePurchaseRow(rowId) {
+        document.getElementById(rowId).remove();
+        calculatePurchaseTotal();
+    }
+
+    function updatePurchaseRow(rowId, fieldType, index) {
+        const row = document.getElementById(rowId);
+        let displayInput;
+        let hiddenId;
+        
+        if (fieldType === 'quantity') {
+            displayInput = row.querySelector('.purchase-qty-display');
+            hiddenId = `purchase_qty_${index}`;
+        } else {
+            displayInput = row.querySelector('.purchase-price-display');
+            hiddenId = `purchase_price_${index}`;
+        }
+
+        let value = displayInput.value.replace(/[^0-9]/g, '');
+        document.getElementById(hiddenId).value = value;
+        
+        if (value) {
+            displayInput.value = new Intl.NumberFormat('id-ID').format(value);
+        } else {
+            displayInput.value = '';
+        }
+
+        // Calc subtotal for this row
+        const qty = parseFloat(document.getElementById(`purchase_qty_${index}`).value) || 0;
+        const price = parseFloat(document.getElementById(`purchase_price_${index}`).value) || 0;
+        const subtotal = qty * price;
+        
+        document.getElementById(`purchase_subtotal_${index}`).innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(subtotal);
+        
+        calculatePurchaseTotal();
+    }
+
+    function calculatePurchaseTotal() {
+        let grandTotal = 0;
+        const tbody = document.querySelector('#purchase_items_table tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        rows.forEach((row) => {
+            const qtyVal = row.querySelector('.purchase-qty-val');
+            const priceVal = row.querySelector('.purchase-price-val');
+            if (qtyVal && priceVal) {
+                const qty = parseFloat(qtyVal.value) || 0;
+                const price = parseFloat(priceVal.value) || 0;
+                grandTotal += (qty * price);
+            }
+        });
+        
+        document.getElementById('purchase_grand_total').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(grandTotal);
+    }
+
     let maxQuantity = null;
     let minPrice = null;
 
@@ -131,29 +248,25 @@
         const typeInput = document.querySelector('input[name="type"]:checked');
         const type = typeInput ? typeInput.value : 'initial';
         const purchaseFields = document.getElementById('purchase_fields');
+        const saleItemFields = document.getElementById('sale_item_fields');
         const amountField = document.getElementById('amount_field');
         const amountLabel = document.getElementById('amount_label');
 
         // Hide all fields first
         purchaseFields.style.display = 'none';
+        saleItemFields.style.display = 'none';
         amountField.style.display = 'none';
-        document.getElementById('purchase_item_container').style.display = 'none';
-        document.getElementById('sale_item_container').style.display = 'none';
-        document.getElementById('item_name_purchase').disabled = true;
         document.getElementById('item_name_sale').disabled = true;
 
         if (type === 'purchase') {
             purchaseFields.style.display = 'block';
-            document.getElementById('purchase_item_container').style.display = 'block';
-            document.getElementById('item_name_purchase').disabled = false;
-            let colorClass = 'text-success';
-            document.getElementById('purchase_total_display').className = 'fs-4 fw-bold ' + colorClass;
+            // Auto-add first row if empty
+            if (document.querySelector('#purchase_items_table tbody').children.length === 0) {
+                addPurchaseRow();
+            }
         } else if (type === 'sale_item') {
-            purchaseFields.style.display = 'block';
-            document.getElementById('sale_item_container').style.display = 'block';
+            saleItemFields.style.display = 'block';
             document.getElementById('item_name_sale').disabled = false;
-            let colorClass = 'text-danger';
-            document.getElementById('purchase_total_display').className = 'fs-4 fw-bold ' + colorClass;
         } else {
             amountField.style.display = 'block';
             if (type === 'sale') {
@@ -163,7 +276,6 @@
             }
         }
 
-        // Reset validation constraints when switching types
         maxQuantity = null;
         minPrice = null;
         if (type === 'sale_item' && $('#item_name_sale').val()) {

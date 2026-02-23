@@ -131,75 +131,105 @@ class InventoryLedgerController extends Controller
         $request->validate([
             'date' => 'required|date',
             'type' => 'required|in:initial,purchase,sale,sale_item',
+            'branch_id' => 'nullable|exists:branches,id',
+            // Validation for single item inputs
             'item_name' => 'nullable|string',
             'quantity' => 'nullable|integer|min:1',
             'unit_price' => 'nullable|numeric|min:0',
             'amount' => 'nullable|numeric|min:0',
-            'branch_id' => 'nullable|exists:branches,id',
+            // Validation for array inputs (purchases)
+            'items' => 'nullable|array',
+            'items.*.item_name' => 'required_with:items|string',
+            'items.*.quantity' => 'required_with:items|integer|min:1',
+            'items.*.unit_price' => 'required_with:items|numeric|min:0',
         ]);
 
         $type = $request->type;
-        $amount = $request->amount;
-        $itemName = $request->item_name ? strtoupper($request->item_name) : null;
-        
         $user = auth()->user();
         $branchId = null;
+        
         if ($user && $user->isSuperAdmin()) {
             $branchId = $request->branch_id;
         } elseif ($user && $user->isAdmin()) {
             $branchId = $user->branch_id;
         }
 
-        if ($type == 'purchase' || $type == 'sale_item') {
-            $amount = $request->quantity * $request->unit_price;
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $type, $branchId) {
+            if ($type === 'purchase' && $request->has('items') && is_array($request->items)) {
+                // Loop through array of items for multiple purchases
+                foreach ($request->items as $item) {
+                    $itemName = strtoupper($item['item_name']);
+                    $quantity = $item['quantity'];
+                    $unitPrice = $item['unit_price'];
+                    $amount = $quantity * $unitPrice;
 
-        // Add backend validation for sale_item
-        if ($type == 'sale_item' && $itemName) {
-            $totalIn = \App\Models\InventoryLedger::where('item_name', $itemName)
-                ->where('branch_id', $branchId)
-                ->whereIn('type', ['initial', 'purchase'])
-                ->sum('quantity');
-                
-            $totalOut = \App\Models\InventoryLedger::where('item_name', $itemName)
-                ->where('branch_id', $branchId)
-                ->where('type', 'sale')
-                ->sum('quantity');
-                
-            $maxStock = max(0, $totalIn - $totalOut);
-            
-            $minPrice = \App\Models\InventoryLedger::where('item_name', $itemName)
-                ->where('branch_id', $branchId)
-                ->where('type', 'purchase')
-                ->max('unit_price') ?? 0;
+                    \App\Models\InventoryLedger::create([
+                        'date' => $request->date,
+                        'type' => $type,
+                        'item_name' => $itemName,
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                        'amount' => $amount,
+                        'branch_id' => $branchId,
+                    ]);
+                }
+            } else {
+                // Single item logic (sale, sale_item, initial)
+                $amount = $request->amount;
+                $itemName = $request->item_name ? strtoupper($request->item_name) : null;
 
-            if ($request->quantity > $maxStock) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'quantity' => 'Stok tidak mencukupi. Maks: ' . $maxStock
+                if ($type == 'sale_item') {
+                    $amount = $request->quantity * $request->unit_price;
+                }
+
+                // Add backend validation for sale_item
+                if ($type == 'sale_item' && $itemName) {
+                    $totalIn = \App\Models\InventoryLedger::where('item_name', $itemName)
+                        ->where('branch_id', $branchId)
+                        ->whereIn('type', ['initial', 'purchase'])
+                        ->sum('quantity');
+                        
+                    $totalOut = \App\Models\InventoryLedger::where('item_name', $itemName)
+                        ->where('branch_id', $branchId)
+                        ->where('type', 'sale')
+                        ->sum('quantity');
+                        
+                    $maxStock = max(0, $totalIn - $totalOut);
+                    
+                    $minPrice = \App\Models\InventoryLedger::where('item_name', $itemName)
+                        ->where('branch_id', $branchId)
+                        ->where('type', 'purchase')
+                        ->max('unit_price') ?? 0;
+
+                    if ($request->quantity > $maxStock) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'quantity' => 'Stok tidak mencukupi. Maks: ' . $maxStock
+                        ]);
+                    }
+
+                    if ($request->unit_price > 0 && $request->unit_price < $minPrice) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'unit_price' => 'Harga tidak boleh kurang dari harga beli: Rp ' . number_format($minPrice, 0, ',', '.')
+                        ]);
+                    }
+                }
+
+                // Normalize sale sub-types to 'sale' for database
+                if (in_array($type, ['sale_item'])) {
+                    $type = 'sale';
+                }
+
+                \App\Models\InventoryLedger::create([
+                    'date' => $request->date,
+                    'type' => $type,
+                    'item_name' => $itemName,
+                    'quantity' => $request->quantity,
+                    'unit_price' => $request->unit_price,
+                    'amount' => $amount,
+                    'branch_id' => $branchId,
                 ]);
             }
-
-            if ($request->unit_price > 0 && $request->unit_price < $minPrice) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'unit_price' => 'Harga tidak boleh kurang dari harga beli: Rp ' . number_format($minPrice, 0, ',', '.')
-                ]);
-            }
-        }
-
-        // Normalize sale sub-types to 'sale' for database
-        if (in_array($type, ['sale_item'])) {
-            $type = 'sale';
-        }
-
-        \App\Models\InventoryLedger::create([
-            'date' => $request->date,
-            'type' => $type,
-            'item_name' => $itemName,
-            'quantity' => $request->quantity,
-            'unit_price' => $request->unit_price,
-            'amount' => $amount,
-            'branch_id' => $branchId,
-        ]);
+        });
 
         return redirect()->route('inventory.index')->with('success', 'Entry added successfully.');
     }
