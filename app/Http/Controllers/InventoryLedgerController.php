@@ -11,8 +11,8 @@ class InventoryLedgerController extends Controller
      */
     public function index(Request $request)
     {
-        $startDate = $request->input('start_date', \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
         
         $user = auth()->user();
         $selectedBranch = null;
@@ -46,28 +46,35 @@ class InventoryLedgerController extends Controller
             return $item;
         });
 
-        // Filter ledgers down to the selected date range
+        // Filter ledgers down to the selected date range (if provided)
         $filteredLedgers = $ledgers->filter(function ($item) use ($startDate, $endDate) {
             $itemDate = \Carbon\Carbon::parse($item->date)->format('Y-m-d');
-            return $itemDate >= $startDate && $itemDate <= $endDate;
+            
+            if ($startDate && $endDate) {
+                return $itemDate >= $startDate && $itemDate <= $endDate;
+            } elseif ($startDate) {
+                return $itemDate >= $startDate;
+            } elseif ($endDate) {
+                return $itemDate <= $endDate;
+            }
+            
+            return true; // No filter if both empty
         })->values();
 
-        // Calculate period totals for the dashboard cards (income/expense)
+        // Calculate period totals for the dashboard cards
         $totalMasuk = $filteredLedgers->whereIn('type', ['initial', 'purchase'])->sum('amount');
         $totalKeluar = $filteredLedgers->where('type', 'sale')->sum('amount');
+        
+        // Use net change for the filtered period as Total Saldo and Total Stock
+        $totalSaldo = $totalMasuk - $totalKeluar;
 
-        // Calculate Total Stock (cumulative up to endDate)
-        $cumulativeToDate = $ledgers->filter(function ($item) use ($endDate) {
-            return \Carbon\Carbon::parse($item->date)->format('Y-m-d') <= $endDate;
-        });
+        $totalStockIn = $filteredLedgers->whereIn('type', ['initial', 'purchase'])->sum('quantity');
+        $totalStockOut = $filteredLedgers->where('type', 'sale')->sum('quantity');
+        $totalStock = $totalStockIn - $totalStockOut;
 
-        $totalStockIn = $cumulativeToDate->whereIn('type', ['initial', 'purchase'])->sum('quantity');
-        $totalStockOut = $cumulativeToDate->where('type', 'sale')->sum('quantity');
-        $totalStock = max(0, $totalStockIn - $totalStockOut);
-
-        // Calculate Stock Per Item (cumulative up to endDate)
+        // Calculate Stock Per Item (period-specific)
         $stockPerItem = [];
-        $items = $cumulativeToDate->whereNotNull('item_name')->groupBy('item_name');
+        $items = $filteredLedgers->whereNotNull('item_name')->groupBy('item_name');
         foreach ($items as $name => $transactions) {
             $in = $transactions->whereIn('type', ['initial', 'purchase'])->sum('quantity');
             $out = $transactions->where('type', 'sale')->sum('quantity');
