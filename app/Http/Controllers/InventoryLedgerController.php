@@ -11,8 +11,13 @@ class InventoryLedgerController extends Controller
      */
     public function index(Request $request)
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = $request->input('start_date', \Carbon\Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', \Carbon\Carbon::now()->endOfMonth()->format('Y-m-d'));
+
+        // Validation: If Sampai Tanggal < Mulai Tanggal, sync Mulai Tanggal to Sampai Tanggal
+        if ($startDate && $endDate && $endDate < $startDate) {
+            $startDate = $endDate;
+        }
         
         $user = auth()->user();
         $selectedBranch = null;
