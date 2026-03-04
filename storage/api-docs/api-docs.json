@@ -1,0 +1,637 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Rizki Mandiri API Documentation",
+        "description": "L5 Swagger OpenApi description for Rizki Mandiri POS API",
+        "contact": {
+            "email": "admin@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://my-default-host.com",
+            "description": "Base API Server"
+        }
+    ],
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Authenticate user and issue token",
+                "description": "Login with email and password to get a Bearer token",
+                "operationId": "authLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "admin@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login berhasil."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Admin User"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "admin@example.com"
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "admin"
+                                                        },
+                                                        "branch_id": {
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|AbcDefGhiJklMnoPqrStuVwxYz"
+                                                },
+                                                "token_type": {
+                                                    "type": "string",
+                                                    "example": "Bearer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email atau Password yang diberikan tidak cocok dengan catatan kami."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout user and revoke token",
+                "description": "Revokes the current access token for the authenticated user",
+                "operationId": "authLogout",
+                "responses": {
+                    "200": {
+                        "description": "Successful logout",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logout berhasil. Token telah dihapus."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get the authenticated user's profile",
+                "description": "Returns the profile information of the currently authenticated user.",
+                "operationId": "authMe",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Profil pengguna berhasil diambil."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Admin User"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "admin@example.com"
+                                                        },
+                                                        "role": {
+                                                            "type": "string",
+                                                            "example": "admin"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/inventory": {
+            "get": {
+                "tags": [
+                    "Inventory Base"
+                ],
+                "summary": "Get list of inventory ledgers",
+                "description": "Retrieve inventory ledgers with optional date and branch filters",
+                "operationId": "getInventoryLedgers",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for filter (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for filter (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "branch_id",
+                        "in": "query",
+                        "description": "Branch ID (SuperAdmin only)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data inventory berhasil ditarik."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_saldo": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 1000000
+                                                },
+                                                "total_stock": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Inventory Base"
+                ],
+                "summary": "Create new inventory record",
+                "description": "Add a new inventory ledger entry (initial, purchase, sale, sale_item). Supports single item or array of items for purchases.",
+                "operationId": "storeInventoryLedger",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "date",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-10-25"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "purchase",
+                                        "enum": [
+                                            "initial",
+                                            "purchase",
+                                            "sale",
+                                            "sale_item"
+                                        ]
+                                    },
+                                    "branch_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "item_name": {
+                                        "type": "string",
+                                        "example": "Item A",
+                                        "nullable": true
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 10,
+                                        "nullable": true
+                                    },
+                                    "unit_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15000,
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 150000,
+                                        "nullable": true
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "item_name": {
+                                                    "type": "string",
+                                                    "example": "Item B"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 20000
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Entry added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Entry added successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/inventory/{id}": {
+            "put": {
+                "tags": [
+                    "Inventory Base"
+                ],
+                "summary": "Update an existing inventory record",
+                "description": "Update the details of an existing inventory ledger entry",
+                "operationId": "updateInventoryLedger",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the inventory ledger to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "date",
+                                    "type"
+                                ],
+                                "properties": {
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-10-25"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "sale",
+                                        "enum": [
+                                            "initial",
+                                            "purchase",
+                                            "sale",
+                                            "sale_item"
+                                        ]
+                                    },
+                                    "branch_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "item_name": {
+                                        "type": "string",
+                                        "example": "Item A",
+                                        "nullable": true
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "unit_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20000,
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Entry updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Entry updated successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action"
+                    },
+                    "404": {
+                        "description": "Data not found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Inventory Base"
+                ],
+                "summary": "Delete an existing inventory record",
+                "description": "Remove the specified inventory ledger entry from database",
+                "operationId": "destroyInventoryLedger",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the inventory ledger to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Entry deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Entry deleted successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized action"
+                    },
+                    "404": {
+                        "description": "Data not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Inventory Base",
+            "description": "Inventory Base"
+        }
+    ]
+}
